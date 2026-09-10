@@ -1,0 +1,48 @@
+# ============================================
+# Carters Lake Kiosk
+# Initial .gitignore
+# ============================================
+
+# Operating System Files
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.iml
+.vs/
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# Local Environment Files
+.env
+.env.*
+!.env.example
+
+# Build / Generated Output
+build/
+dist/
+out/
+temp/
+tmp/
+
+# Test / Coverage Output
+coverage/
+TestResults/
+
+# Local Development Database Files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
