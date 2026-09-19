@@ -65,7 +65,7 @@ This project is being developed by a five-member capstone team.
    - Digital touchscreen keyboard
    - Visitor usability
 
-3. **Data / Scorekeeping**
+3. ~~**Data / Scorekeeping**~~
    - Local data persistence
    - Scorekeeping
    - Leaderboards
