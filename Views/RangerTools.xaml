@@ -8,7 +8,9 @@
       d:DesignHeight="1080" d:DesignWidth="1920"
       Background="White"
       Title="RangerTools">
+    
 
+    <!-- Ranger Tools UI elements. Stackpanel keeps buttons aligned in the center. -->
     <Grid>
         <Rectangle HorizontalAlignment="Center" Height="73" Margin="0,1007,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
         <Rectangle HorizontalAlignment="Center" Height="46" Margin="0,961,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
@@ -17,5 +19,14 @@
         <Image Margin="10,10,1814,993" Source= "/Images/Army Corp Logo.jpg" Stretch="Fill"/>
         <Button x:Name="logoButton" Content="&#xD;&#xA;" HorizontalAlignment="Left" Height="77" Margin="10,10,0,993" Width="96" Click="logoExitRangerTools" Background="Transparent"/>
         <Button x:Name="rangerToolsBackButton" Content="Back" HorizontalAlignment="Left" Height="76" Margin="39,984,0,0" VerticalAlignment="Top" Width="348" Background="#FFB90000" FontSize="48" BorderBrush="Black" Click="rangerToolsBackButton_Click_1"/>
+
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,340,0,0">
+            <Button Content="Add Game" Width="447" Height="143" Margin="0,0,0,35" FontSize="55" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Button Content="Remove Game" Width="447" Height="143" Margin="0,0,0,35" FontSize="55"/>
+            <Button Content="Analytic Tools" Width="447" Height="143" Margin="0,0,0,35" FontSize="55"/>
+        </StackPanel>
+        <Rectangle HorizontalAlignment="Center" Height="148" Margin="0,128,0,0" Stroke="Black" VerticalAlignment="Top" Width="1140" Fill="#FFD6D6D6"/>
+        <TextBlock Height="98" Margin="754,153,754,0" TextWrapping="Wrap" Text="Ranger Tools" VerticalAlignment="Top" FontSize="72"/>
+
     </Grid>
 </Page>

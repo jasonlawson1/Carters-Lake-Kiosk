@@ -10,8 +10,8 @@ namespace Capstone_UI.Models
         public string ImagePath { get; set; }
         public string Category { get; set; }
         public string Description { get; set; }
-        public string ExecutablePath { get; set; } // Optional: Path to the game's executable for launching
+        public string ExecutablePath { get; set; } //Path to the game's executable for launching
 
-        public List<string> ImageList { get; set; } = new List<string>(); // Optional: List of image paths for the game
+        public List<string> ImageList { get; set; } = new List<string>(); // Optional: List of image paths for the game if multiple images are desired for screenshot slide
     }
 }
