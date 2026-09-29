@@ -9,7 +9,7 @@
       d:DesignHeight="1080" d:DesignWidth="1920"
       Title="GameSelection" Background="White">
 
-    
+
     <Grid>
         <!--Decorate bars for the top and bottom-->
         <Rectangle HorizontalAlignment="Center" Height="73" Margin="0,1007,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
@@ -97,6 +97,14 @@
 
         <Image Margin="10,10,1814,993" Source= "/Images/Army Corp Logo.jpg" Stretch="Fill"/>
         <Button x:Name="logoButton" Content="&#xD;&#xA;" HorizontalAlignment="Left" Height="77" Margin="10,10,0,0" VerticalAlignment="Top" Width="96" Background="Transparent" Click="logoExit"/>
+
+        <!-- Loading Overlay (Hidden by default; controls visibility from code-behind via LoadingOverlay.Visibility) -->
+        <Grid x:Name="LoadingOverlay" Background="#80000000" Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="250" Height="25" Margin="0,0,0,15"/>
+                <TextBlock Text="Loading Game..." Foreground="White" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
 
     </Grid>
 </Page>

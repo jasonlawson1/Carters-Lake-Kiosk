@@ -15,7 +15,7 @@ namespace Capstone_UI
         private DispatcherTimer _imageCycleTimer; // Timer to cycle through images for the selected game
         private int _currentImageIndex = 0; // Index to track the current image being displayed for the selected game
 
-        public GameSelection() 
+        public GameSelection()
         {
             InitializeComponent(); //Loads UI elements onto screen. DO NOT MOVE AND DO NOT DELETE!
 
@@ -85,7 +85,7 @@ namespace Capstone_UI
         }
 
         // Stop the timer when the page is unloaded to prevent it from running in the background
-        private void GameSelection_Unloaded(object sender, RoutedEventArgs e) 
+        private void GameSelection_Unloaded(object sender, RoutedEventArgs e)
         {
             _imageCycleTimer.Stop();
         }
@@ -130,13 +130,13 @@ namespace Capstone_UI
             {
                 string imageToLoad = game.ImagePath;
 
-                if(game.ImageList != null && game.ImageList.Count > _currentImageIndex)
+                if (game.ImageList != null && game.ImageList.Count > _currentImageIndex)
                 {
                     imageToLoad = game.ImageList[_currentImageIndex];
                 }
                 string cleanPath = imageToLoad.TrimStart('/');
 
-                Uri resourceURI = new Uri ($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
+                Uri resourceURI = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
                 BitmapImage bitmap = new BitmapImage();
                 bitmap.BeginInit();
                 bitmap.UriSource = resourceURI;
@@ -144,7 +144,7 @@ namespace Capstone_UI
                 bitmap.EndInit();
                 ImgThumbnail.Source = bitmap;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to load image: {ex.Message}");
                 ImgThumbnail.Source = null; // Clear the image if loading fails
@@ -173,7 +173,7 @@ namespace Capstone_UI
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e) //Play button properties. Launches game on click. Throws error if game is unavailable.
+        private async void Button_Click(object sender, RoutedEventArgs e) //Play button properties. Launches game on click. Throws error if game is unavailable.
         {
             if (GameListBox.SelectedItem is Game selectedGame)
             {
@@ -194,17 +194,29 @@ namespace Capstone_UI
 
                 try
                 {
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = fullExecutablePath,
-                        WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
-                        UseShellExecute = true
-                    };
+                    // 1. Show loading overlay while launching the external game process
+                    LoadingOverlay.Visibility = Visibility.Visible;
 
-                    Process.Start(startInfo);
+                    // 2. Start the process in the background and pause briefly so the loading bar stays visible
+                    await Task.Run(() =>
+                    {
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = fullExecutablePath,
+                            WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
+                            UseShellExecute = true
+                        };
+
+                        Process.Start(startInfo);
+                        Task.Delay(1500).Wait(); // Brief buffer so user sees the loading indicator
+                    });
+
+                    // 3. Hide loading overlay once launched
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
                 }
                 catch (Exception ex)
                 {
+                    LoadingOverlay.Visibility = Visibility.Collapsed; // Ensure it hides even if an error occurs
                     MessageBox.Show($"Could not launch game:\n{ex.Message}", "Launch Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
