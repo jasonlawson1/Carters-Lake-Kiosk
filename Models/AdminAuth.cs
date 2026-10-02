@@ -10,7 +10,7 @@ namespace Capstone_UI.Models
     {
         public static bool VerifyAdminPassword()
         {
-            string inputPassword = Interaction.InputBox("Enter the admin password to leave the program:", "Admin Verification", "", -1, -1);
+            string inputPassword = Interaction.InputBox("Enter the admin password: ", "Admin Verification", "", -1, -1);
 
             if (inputPassword == "RangerPassword123")
             {

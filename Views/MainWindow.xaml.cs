@@ -37,6 +37,11 @@ namespace Capstone_UI
 
         private void Ranger_Button_Click(object sender, RoutedEventArgs e) //This is the code for the ranger button. It will navigate to the RangerTools page when clicked.
         {
+            if (!AdminAuth.VerifyAdminPassword())
+            {
+                return;
+            }
+
             MainFrame.Navigate(new RangerTools());
         }
 
