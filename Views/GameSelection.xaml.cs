@@ -153,16 +153,7 @@ namespace Capstone_UI
 
         private void logoExit(object sender, RoutedEventArgs e) // Event handler for the exit logo button click
         {
-            MessageBoxResult result = MessageBox.Show(
-                "Are you sure you want to exit the program?",
-                "Exit Confirmation",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                Application.Current.Shutdown();
-            }
+           AdminAuth.RequestAppExit();
         }
 
         private void gameSelectBackButton_Click(object sender, RoutedEventArgs e) // Button for returning back to Main Menu

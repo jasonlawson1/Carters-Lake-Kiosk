@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Capstone_UI.Models;
+using Microsoft.VisualBasic;
 
 namespace Capstone_UI
 {
@@ -21,12 +22,7 @@ namespace Capstone_UI
 
         private void menuExitButton(object sender, RoutedEventArgs e) //This is the code for the exit button in the menu bar. It will ask the user if they are sure they want to exit the application. If they click yes, the application will close. If they click no, the application will stay open.
         {
-            MessageBoxResult result = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                Application.Current.Shutdown();
-            }
+            AdminAuth.RequestAppExit();
         }
 
         private void Play_Button_Click(object sender, RoutedEventArgs e) //This is the code for the play button. It will navigate to the GameSelection page when clicked.
@@ -36,16 +32,13 @@ namespace Capstone_UI
 
         private void logoExit(object sender, RoutedEventArgs e) //This is the code for the logo button. It will ask the user if they are sure they want to exit the application. If they click yes, the application will close. If they click no, the application will stay open.
         {
-            MessageBoxResult result = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                Application.Current.Shutdown();
-            }
+            AdminAuth.RequestAppExit();
         }
 
         private void Ranger_Button_Click(object sender, RoutedEventArgs e) //This is the code for the ranger button. It will navigate to the RangerTools page when clicked.
         {
             MainFrame.Navigate(new RangerTools());
         }
+
     }
 }

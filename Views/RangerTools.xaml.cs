@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Capstone_UI.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -30,11 +31,7 @@ namespace Capstone_UI
 
         private void logoExitRangerTools(object sender, RoutedEventArgs e) //Exit button to close the application via the castle logo.
         {
-            MessageBoxResult result = MessageBox.Show("Are you sure you want to exit?", "Exit Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                Application.Current.Shutdown();
-            }
+            AdminAuth.RequestAppExit();
         }
 
     }
