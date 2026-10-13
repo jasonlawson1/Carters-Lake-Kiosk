@@ -4,12 +4,12 @@ using Microsoft.Data.Sqlite;
 
 namespace Capstone_UI.Services;
 
-public class Database
+public class DatabaseService
 {
 
     private readonly string _connectionString;
 
-    public Database()
+    public DatabaseService()
     {
         string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "CapstoneUI");
@@ -32,7 +32,6 @@ public class Database
                               id INTEGER PRIMARY KEY AUTOINCREMENT,
                               username TEXT NOT NULL,
                               is_adult INTEGER NOT NULL,
-                              session_duration_seconds INTEGER,
                           created_at TEXT NOT NULL
                               );
                               
