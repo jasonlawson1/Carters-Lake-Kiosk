@@ -15,6 +15,7 @@ namespace Capstone_UI.Models
             if (inputPassword == "RangerPassword123")
             {
                 return true;
+
             }
 
             if (!string.IsNullOrEmpty(inputPassword)) // Check if the user entered something
