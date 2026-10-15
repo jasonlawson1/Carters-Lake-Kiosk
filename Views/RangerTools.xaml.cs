@@ -76,6 +76,7 @@ namespace Capstone_UI
                     // 4. Create the fully customized game object
                     Game newGame = new Game
                     {
+                        Id = App.Db.InsertGame(Title),
                         Title = customTitle.Trim(),
                         ExecutablePath = exePath,
                         Category = customCategory.Trim(),
