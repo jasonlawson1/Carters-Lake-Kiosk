@@ -10,15 +10,17 @@ public class DatabaseService
 
     private readonly string _connectionString;
 
-    public DatabaseService()
+    public DatabaseService(string? dbPath = null)
     {
-        string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "CapstoneUI");
-        Directory.CreateDirectory(folder);
-        string dbPath = Path.Combine(folder, "gamehub.db");
+        if (dbPath == null)
+        {
+            string folder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CapstoneUI");
+            Directory.CreateDirectory(folder);
+            dbPath = Path.Combine(folder, "gamehub.db");
+        }
 
-        _connectionString = $"Data Source={dbPath}; Foreign Keys=True";
-
+        _connectionString = $"Data Source={dbPath};Foreign Keys=True";
         CreateTables();
     }
 
