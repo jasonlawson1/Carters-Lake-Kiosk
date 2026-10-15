@@ -1,4 +1,5 @@
 ﻿using Capstone_UI.Models;
+using Capstone_UI.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -26,12 +27,15 @@ namespace Capstone_UI
 
         private void logoExitRangerTools(object sender, RoutedEventArgs e)
         {
-            AdminAuth.RequestAppExit();
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            AddGameButton_Click(sender, e);
+            try
+            {
+                KeyboardHelper.OpenTouchKeyboard();
+                AdminAuth.RequestAppExit();
+            }
+            finally
+            {
+                KeyboardHelper.CloseTouchKeyboard();
+            }
         }
 
         private void AddGameButton_Click(object sender, RoutedEventArgs e)
@@ -50,7 +54,7 @@ namespace Capstone_UI
                     string defaultTitle = System.IO.Path.GetFileNameWithoutExtension(exePath);
 
                     // 1. Prompt staff for a custom Title
-                    string customTitle = Microsoft.VisualBasic.Interaction.InputBox(
+                    string customTitle = KeyboardHelper.PromptWithKeyboard(
                         "Enter the display title for this game:",
                         "Game Title",
                         defaultTitle);
@@ -58,7 +62,7 @@ namespace Capstone_UI
                     if (string.IsNullOrWhiteSpace(customTitle)) return;
 
                     // 2. Prompt staff for a custom Category
-                    string customCategory = Microsoft.VisualBasic.Interaction.InputBox(
+                    string customCategory = KeyboardHelper.PromptWithKeyboard(
                         "Enter the category (e.g., Water Safety, Puzzle, Added Games):",
                         "Game Category",
                         "Added Games");
@@ -66,7 +70,7 @@ namespace Capstone_UI
                     if (string.IsNullOrWhiteSpace(customCategory)) customCategory = "Added Games";
 
                     // 3. Prompt staff for a custom Description
-                    string customDescription = Microsoft.VisualBasic.Interaction.InputBox(
+                    string customDescription = KeyboardHelper.PromptWithKeyboard(
                         "Enter a short description for the game:",
                         "Game Description",
                         "Custom added game build for the kiosk.");
@@ -109,7 +113,6 @@ namespace Capstone_UI
             }
         }
 
-
         private void RemoveGameButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -120,10 +123,10 @@ namespace Capstone_UI
                     return;
                 }
 
-                string currentGames = string.Join("\n• ", GameSelection.GamesList.Select(g => g.Title));
+                string currentGames = string.Join("\n", GameSelection.GamesList.Select(g => g.Title));
 
-                string inputTitle = Microsoft.VisualBasic.Interaction.InputBox(
-                    $"Current games on kiosk:\n• {currentGames}\n\nEnter the exact title of the game you want to remove:",
+                string inputTitle = KeyboardHelper.PromptWithKeyboard(
+                    $"Current games on kiosk:\n{currentGames}\n\nEnter the exact title of the game you want to remove:",
                     "Remove Game",
                     "");
 

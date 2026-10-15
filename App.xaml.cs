@@ -1,22 +1,39 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using Capstone_UI.Services;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Capstone_UI
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
-        public static DatabaseService Db { get; private set; } = null!;
-
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            Db = new DatabaseService();
+
+            // Listen globally for any TextBox gaining focus across the entire app
+            EventManager.RegisterClassHandler(
+                typeof(TextBox),
+                TextBox.GotFocusEvent,
+                new RoutedEventHandler(OnTextBoxGotFocus)
+            );
+        }
+
+        private void OnTextBoxGotFocus(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is TextBox textBox)
+            {
+                // Find if the text box is inside a ScrollViewer and scroll it into view
+                DependencyObject parent = VisualTreeHelper.GetParent(textBox);
+                while (parent != null && !(parent is ScrollViewer))
+                {
+                    parent = VisualTreeHelper.GetParent(parent);
+                }
+
+                if (parent is ScrollViewer scrollViewer)
+                {
+                    textBox.BringIntoView();
+                }
+            }
         }
     }
-
 }

@@ -118,7 +118,15 @@ namespace Capstone_UI
 
         private void logoExit(object sender, RoutedEventArgs e)
         {
-            AdminAuth.RequestAppExit();
+            try
+            {
+                KeyboardHelper.OpenTouchKeyboard();
+                AdminAuth.RequestAppExit();
+            }
+            finally
+            {
+                KeyboardHelper.CloseTouchKeyboard();
+            }
         }
 
         private void gameSelectBackButton_Click(object sender, RoutedEventArgs e)
