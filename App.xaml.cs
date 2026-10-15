@@ -18,5 +18,4 @@ namespace Capstone_UI
             Db = new DatabaseService();
         }
     }
-
 }
