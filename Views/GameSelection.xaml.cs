@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Capstone_UI.Views;
 
 namespace Capstone_UI
 {
@@ -45,6 +46,8 @@ namespace Capstone_UI
             {
                 LoadGamesListFromDisk();
             }
+            foreach (var game in GamesList)
+                App.Db.EnsureGame(game.Id, game.Title);
 
             GameListBox.ItemsSource = null;
             GameListBox.ItemsSource = GamesList;
@@ -155,30 +158,48 @@ namespace Capstone_UI
                     MessageBox.Show($"Game executable not found at:\n{fullExecutablePath}\n\nMake sure the USB drive or game folder is accessible.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                // creates a window so the user can enter their name and if they are an adult or not
+                var prompt = new PlayerInfoWindow { Owner = Window.GetWindow(this) };
 
+                if (prompt.ShowDialog() != true)
+                    return;   // they cancelled, so don't launch
+                
+                string username = prompt.Username;
+                bool isAdult = prompt.IsAdult;
                 try
                 {
                     LoadingOverlay.Visibility = Visibility.Visible;
 
-                    await Task.Run(() =>
+                    var startInfo = new ProcessStartInfo
                     {
-                        ProcessStartInfo startInfo = new ProcessStartInfo
-                        {
-                            FileName = fullExecutablePath,
-                            WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
-                            UseShellExecute = true
-                        };
+                        FileName = fullExecutablePath,
+                        WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
+                        UseShellExecute = true
+                    };
 
-                        Process.Start(startInfo);
-                        Task.Delay(1500).Wait();
-                    });
+                    using var process = Process.Start(startInfo);
+                    if (process == null)
+                    {
+                        MessageBox.Show("The game didn't start.");
+                        return;
+                    }
 
-                    LoadingOverlay.Visibility = Visibility.Collapsed;
+                    int userId = App.Db.InsertUser(username, isAdult);
+                    var stopwatch = Stopwatch.StartNew();
+
+                    await process.WaitForExitAsync();   // waits here while they play
+
+                    stopwatch.Stop();
+                    int score = 0;   // placeholder until you decide how games report scores
+                    App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds);
                 }
                 catch (Exception ex)
                 {
-                    LoadingOverlay.Visibility = Visibility.Collapsed;
                     MessageBox.Show($"Could not launch game:\n{ex.Message}", "Launch Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
                 }
             }
             else
@@ -215,6 +236,7 @@ namespace Capstone_UI
                 {
                     new Game
                     {
+                        Id = 1,
                         Title = "I Spy Water Safety",
                         ImagePath = "/Images/I Spy Water Safety Menu.png",
                         ImageList = new List<string> {"/Images/I Spy Water Safety Menu.png","/Images/I Spy Water Safety Character Select.png","/Images/I Spy Water Safety Gameplay.png"},
@@ -224,6 +246,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 2,
                         Title = "Water Resource Game",
                         ImagePath = "/Images/Water Management Menu.png",
                         ImageList = new List<string> {"/Images/Water Management Menu.png","/Images/Water Management Gameplay.png","/Images/Water Management Gameplay 2.png","/Images/Water Management Gameplay 3.png" },
@@ -233,6 +256,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 3,
                         Title = "Carters Lake Boating Safety",
                         ImagePath = "/Images/A Boating Game Menu.png",
                         ImageList = new List<string> {"/Images/A Boating Game Menu.png","/Images/A Boating Game Character Select.png","/Images/A Boating Game Gameplay.png","/Images/A Boating Game GamePlay 2.png","/Images/A Boating Game Quiz.png"},
@@ -242,6 +266,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 4,
                         Title = "Drawing The Night Sky",
                         ImagePath = "/Images/Drawing The Night Sky Menu.png",
                         ImageList = new List<string> {"/Images/Drawing The Night Sky Menu.png","/Images/Drawing The Night Sky Gameplay 1.png","/Images/Drawing The Night Sky Gameplay 2.png","/Images/Drawing The Night Sky gameplay 3.png" },
