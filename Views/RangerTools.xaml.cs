@@ -42,26 +42,71 @@ namespace Capstone_UI
         {
             try
             {
+                // 1. Point explicitly to the running application's local "Games" folder
+                string localGamesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games");
+                Directory.CreateDirectory(localGamesFolder); // Ensure the folder exists on disk
+
                 OpenFileDialog openFileDialog = new OpenFileDialog
                 {
                     Filter = "Game Executables (*.exe)|*.exe|All Files (*.*)|*.*",
-                    Title = "Select Game Executable (USB or Local)"
+                    Title = "Select Game Executable (USB or Local)",
+                    InitialDirectory = localGamesFolder, // Forces the file picker to open in current project files
+                    RestoreDirectory = true // Prevents Windows from changing your app's working directory
                 };
 
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    string exePath = openFileDialog.FileName;
-                    string defaultTitle = System.IO.Path.GetFileNameWithoutExtension(exePath);
+                    string sourceExePath = openFileDialog.FileName;
 
-                    // 1. Prompt staff for a custom Title
+                    if (GameSelection.GamesList == null)
+                    {
+                        GameSelection.GamesList = new List<Game>();
+                    }
+
+                    // 2. ROBUST FILE-BASED DUPLICATE CHECK (File Name + File Size)
+                    FileInfo newFileInfo = new FileInfo(sourceExePath);
+
+                    bool isDuplicateGame = GameSelection.GamesList.Any(g =>
+                    {
+                        if (string.IsNullOrEmpty(g.ExecutablePath)) return false;
+
+                        string existingFullPath = Path.IsPathRooted(g.ExecutablePath)
+                            ? g.ExecutablePath
+                            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, g.ExecutablePath);
+
+                        if (!File.Exists(existingFullPath)) return false;
+
+                        FileInfo existingFileInfo = new FileInfo(existingFullPath);
+
+                        return existingFileInfo.Name.Equals(newFileInfo.Name, StringComparison.OrdinalIgnoreCase) &&
+                               existingFileInfo.Length == newFileInfo.Length;
+                    });
+
+                    if (isDuplicateGame)
+                    {
+                        MessageBox.Show("This exact game build (.exe) is already installed on the kiosk system!", "Duplicate Game", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    string defaultTitle = Path.GetFileNameWithoutExtension(sourceExePath);
+
+                    // 3. Prompt staff for a custom Title
                     string customTitle = KeyboardHelper.PromptWithKeyboard(
                         "Enter the display title for this game:",
                         "Game Title",
                         defaultTitle);
 
                     if (string.IsNullOrWhiteSpace(customTitle)) return;
+                    customTitle = customTitle.Trim();
 
-                    // 2. Prompt staff for a custom Category
+                    // Prevent duplicate titles
+                    if (GameSelection.GamesList.Any(g => g.Title.Equals(customTitle, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        MessageBox.Show("A game with this title already exists. Please choose a unique title.", "Duplicate Title", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // 4. Prompt staff for a custom Category
                     string customCategory = KeyboardHelper.PromptWithKeyboard(
                         "Enter the category (e.g., Water Safety, Puzzle, Added Games):",
                         "Game Category",
@@ -69,7 +114,7 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customCategory)) customCategory = "Added Games";
 
-                    // 3. Prompt staff for a custom Description
+                    // 5. Prompt staff for a custom Description
                     string customDescription = KeyboardHelper.PromptWithKeyboard(
                         "Enter a short description for the game:",
                         "Game Description",
@@ -77,39 +122,84 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customDescription)) customDescription = "Custom added game build.";
 
-                    // 4. Create the fully customized game object
+                    // 6. COPY GAME FILES TO LOCAL KIOSK DIRECTORY
+                    string safeFolderName = string.Join("_", customTitle.Split(Path.GetInvalidFileNameChars()));
+
+                    string baseAppDirectory = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    string sourceDirectory = Path.GetDirectoryName(sourceExePath);
+                    string targetDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games", safeFolderName);
+
+                    string finalStoredPath;
+
+                    if (!sourceExePath.StartsWith(baseAppDirectory, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!string.IsNullOrEmpty(sourceDirectory) && Directory.Exists(sourceDirectory))
+                        {
+                            CopyDirectory(sourceDirectory, targetDirectory);
+                        }
+
+                        string exeFileName = Path.GetFileName(sourceExePath);
+                        finalStoredPath = Path.Combine("Games", safeFolderName, exeFileName);
+                    }
+                    else
+                    {
+                        finalStoredPath = sourceExePath.Substring(baseAppDirectory.Length);
+                    }
+
+                    // 7. Create and save game object
                     Game newGame = new Game
                     {
-                        Title = customTitle.Trim(),
-                        ExecutablePath = exePath,
+                        Title = customTitle,
+                        ExecutablePath = finalStoredPath,
                         Category = customCategory.Trim(),
                         Description = customDescription.Trim(),
                         ImagePath = "/Images/DefaultGameMenu.png",
-                        ImageList = new List<string> { "/Images/DefaultGameMenu.png" }
+                        ImageList = new List<string> { "/Images/DefaultGameMenu.png" },
+                        IsActive = true
                     };
 
-                    if (GameSelection.GamesList == null)
-                    {
-                        GameSelection.GamesList = new List<Game>();
-                    }
-
-                    // Prevent duplicate titles
-                    if (GameSelection.GamesList.Any(g => g.Title.Equals(newGame.Title, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        MessageBox.Show("A game with this title already exists. Please choose a unique title.", "Duplicate Title", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    // Add and save permanently
                     GameSelection.GamesList.Add(newGame);
                     GameSelection.SaveGamesList();
 
-                    MessageBox.Show($"'{newGame.Title}' was successfully added with its custom details and saved permanently!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"'{newGame.Title}' was successfully copied to local kiosk storage and saved permanently!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Could not add game: {ex.Message}", "Error Adding Game", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to recursively copy all files and subdirectories from source to target.
+        /// </summary>
+        private static void CopyDirectory(string sourceDir, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+
+            foreach (string file in Directory.GetFiles(sourceDir))
+            {
+                string targetFilePath = Path.Combine(targetDir, Path.GetFileName(file));
+                File.Copy(file, targetFilePath, overwrite: true);
+            }
+
+            foreach (string subDir in Directory.GetDirectories(sourceDir))
+            {
+                string targetSubDir = Path.Combine(targetDir, Path.GetFileName(subDir));
+                CopyDirectory(subDir, targetSubDir);
+            }
+        }
+
+        private void ManageGameListButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                GameManagerWindow managerWindow = new GameManagerWindow();
+                managerWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not open game manager: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -136,8 +226,41 @@ namespace Capstone_UI
 
                 if (match != null)
                 {
-                    GameSelection.RemoveGameByTitle(match.Title);
-                    MessageBox.Show($"'{match.Title}' was successfully removed from the kiosk and disk permanently!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // 1. DELETE PHYSICAL FILES FROM DISK
+                    if (!string.IsNullOrEmpty(match.ExecutablePath))
+                    {
+                        try
+                        {
+                            string fullPath = Path.IsPathRooted(match.ExecutablePath)
+                                ? match.ExecutablePath
+                                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, match.ExecutablePath);
+
+                            string gameDirectory = Path.GetDirectoryName(fullPath);
+
+                            if (!string.IsNullOrEmpty(gameDirectory) &&
+                                gameDirectory.Contains("Games", StringComparison.OrdinalIgnoreCase) &&
+                                Directory.Exists(gameDirectory))
+                            {
+                                // Clear Read-Only attributes so Windows permits deletion
+                                foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories))
+                                {
+                                    File.SetAttributes(file, FileAttributes.Normal);
+                                }
+
+                                Directory.Delete(gameDirectory, recursive: true);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Warning: Could not delete physical folder: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+
+                    // 2. DIRECTLY REMOVE FROM LIST AND SAVE PERMANENTLY
+                    GameSelection.GamesList.Remove(match);
+                    GameSelection.SaveGamesList();
+
+                    MessageBox.Show($"'{match.Title}' was successfully removed from the kiosk and its folder was deleted from disk!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
@@ -150,4 +273,4 @@ namespace Capstone_UI
             }
         }
     }
-}
+    }

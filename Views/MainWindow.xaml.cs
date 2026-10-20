@@ -39,6 +39,12 @@ namespace Capstone_UI
             MainFrame.Navigate(new GameSelection());
         }
 
+        private void MainMenu_Button_Click(object sender, RoutedEventArgs e) // This is the code to return to the Main Menu view when clicked.
+        {
+            // Replace 'MainMenuView' with your actual Main Menu page class name if it differs
+            MainFrame.Navigate(new MainWindow());
+        }
+
         private void logoExit(object sender, RoutedEventArgs e) //This is the code for the logo button. It will ask the user if they are sure they want to exit the application. If they click yes, the application will close. If they click no, the application will stay open.
         {
             try
