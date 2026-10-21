@@ -1,6 +1,10 @@
 ﻿using Capstone_UI.Models;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -26,6 +30,9 @@ namespace Capstone_UI
 
         private DispatcherTimer _imageCycleTimer;
         private int _currentImageIndex = 0;
+
+        // Path constant to the prebundled default fallback image
+        private const string DEFAULT_FALLBACK_IMAGE = "pack://application:,,,/Images/DefaultGameMenu.png";
 
         public GameSelection()
         {
@@ -90,6 +97,10 @@ namespace Capstone_UI
             }
         }
 
+        /// <summary>
+        /// Updates the displayed thumbnail. Safely falls back to the prebundled DefaultGameMenu.png
+        /// if the file is missing on disk or invalid.
+        /// </summary>
         private void UpdateThumbnailImage(Game game)
         {
             try
@@ -100,20 +111,54 @@ namespace Capstone_UI
                 {
                     imageToLoad = game.ImageList[_currentImageIndex];
                 }
-                string cleanPath = imageToLoad.TrimStart('/');
 
-                Uri resourceURI = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
                 BitmapImage bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                bitmap.UriSource = resourceURI;
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
+
+                if (!string.IsNullOrEmpty(imageToLoad) && imageToLoad.StartsWith("/Images/", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Built-in pack URI image reference
+                    string cleanPath = imageToLoad.TrimStart('/');
+                    bitmap.UriSource = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
+                }
+                else if (!string.IsNullOrEmpty(imageToLoad))
+                {
+                    // Local physical file path on disk
+                    string cleanPath = imageToLoad.TrimStart('/', '\\');
+                    string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, cleanPath);
+
+                    if (File.Exists(fullPath))
+                    {
+                        bitmap.UriSource = new Uri(fullPath, UriKind.Absolute);
+                    }
+                    else
+                    {
+                        // Fallback: Physical file was deleted or missing
+                        bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute);
+                    }
+                }
+                else
+                {
+                    // Fallback: Path string was null or empty
+                    bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute);
+                }
+
                 bitmap.EndInit();
                 ImgThumbnail.Source = bitmap;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to load image: {ex.Message}");
-                ImgThumbnail.Source = null;
+                Debug.WriteLine($"Failed to load thumbnail: {ex.Message}");
+                // Hard catch-all safety net: Load default image directly
+                try
+                {
+                    ImgThumbnail.Source = new BitmapImage(new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute));
+                }
+                catch
+                {
+                    ImgThumbnail.Source = null;
+                }
             }
         }
 
@@ -212,14 +257,13 @@ namespace Capstone_UI
                     string json = File.ReadAllText(filePath);
                     _gamesList = System.Text.Json.JsonSerializer.Deserialize<List<Game>>(json);
 
-                    // If this is an older JSON file without IsActive, default existing games to visible
                     if (_gamesList != null && !json.Contains("IsActive", StringComparison.OrdinalIgnoreCase))
                     {
                         foreach (var g in _gamesList)
                         {
                             g.IsActive = true;
                         }
-                        SaveGamesList(); // Save it back so the file is updated
+                        SaveGamesList();
                     }
                 }
                 catch
@@ -290,7 +334,7 @@ namespace Capstone_UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to save games: {ex.Message}");
+                Debug.WriteLine($"Failed to save games: {ex.Message}");
             }
         }
 
@@ -301,7 +345,6 @@ namespace Capstone_UI
                 var gameToRemove = _gamesList.FirstOrDefault(g => g.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
                 if (gameToRemove != null)
                 {
-                    // Automatically wipe the physical folder off the disk when removed
                     if (!string.IsNullOrEmpty(gameToRemove.ExecutablePath))
                     {
                         try
@@ -316,7 +359,6 @@ namespace Capstone_UI
                                 gameDirectory.Contains("Games", StringComparison.OrdinalIgnoreCase) &&
                                 Directory.Exists(gameDirectory))
                             {
-                                // Clear Read-Only attributes so Windows permits deletion
                                 foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories))
                                 {
                                     File.SetAttributes(file, FileAttributes.Normal);
