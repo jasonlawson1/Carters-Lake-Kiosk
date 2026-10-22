@@ -9,9 +9,18 @@ using System.Windows.Controls;
 
 namespace Capstone_UI
 {
+    /// <summary>
+    /// Interaction logic for GameManagerWindow.xaml. Handles kiosk game lineup management, 
+    /// metadata editing, thumbnail replacement, and touch-screen keyboard positioning.
+    /// </summary>
     public partial class GameManagerWindow : Window
     {
+        // Tracks whether the touch keyboard is currently active/open
         private bool _isKeyboardOpen = true;
+
+        // ==========================================
+        // Constructor & Lifecycle Events
+        // ==========================================
 
         public GameManagerWindow()
         {
@@ -32,10 +41,11 @@ namespace Capstone_UI
         {
             try
             {
-                // Snap window to absolute top (Top = 0) and center it horizontally
+                // Snap window to the absolute top of the screen and center it horizontally
                 this.Top = 0;
                 this.Left = (SystemParameters.PrimaryScreenWidth - this.Width) / 2;
 
+                // Launch and anchor the touch keyboard at the bottom
                 KeyboardHelper.OpenTouchKeyboard();
                 _isKeyboardOpen = true;
             }
@@ -49,6 +59,7 @@ namespace Capstone_UI
         {
             try
             {
+                // Ensure the touch keyboard is dismissed when exiting the manager window
                 KeyboardHelper.CloseTouchKeyboard();
             }
             catch (Exception ex)
@@ -57,11 +68,16 @@ namespace Capstone_UI
             }
         }
 
+
+        // ==========================================
+        // Touch Keyboard & Window Focus Handlers
+        // ==========================================
+
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Ensure the window stays locked at the very top of the screen
+                // Lock the window at the top of the screen while typing to avoid keyboard overlay
                 this.Top = 0;
             }
             catch (Exception ex)
@@ -91,6 +107,11 @@ namespace Capstone_UI
             }
         }
 
+
+        // ==========================================
+        // DataGrid & Selection Management
+        // ==========================================
+
         private void LoadGames()
         {
             dgGames.ItemsSource = null;
@@ -99,6 +120,7 @@ namespace Capstone_UI
 
         private void dgGames_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Populate edit fields when a game is selected from the data grid
             if (dgGames.SelectedItem is Game selectedGame)
             {
                 TxtEditTitle.Text = selectedGame.Title;
@@ -107,12 +129,18 @@ namespace Capstone_UI
             }
         }
 
+
+        // ==========================================
+        // Thumbnail Management
+        // ==========================================
+
         private void BtnReplaceThumbnails_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (dgGames.SelectedItem is Game selectedGame)
                 {
+                    // Construct safe directory paths based on the game title
                     string safeFolderName = string.Join("_", selectedGame.Title.Split(Path.GetInvalidFileNameChars()));
                     string targetDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games", safeFolderName);
                     string imageTargetDirectory = Path.Combine(targetDirectory, "Images");
@@ -121,6 +149,7 @@ namespace Capstone_UI
 
                     MessageBox.Show("Select up to 4 new replacement thumbnails. Click 'Cancel' at any time to stop.", "Replace Thumbnails", MessageBoxButton.OK, MessageBoxImage.Information);
 
+                    // Loop to allow selecting up to 4 replacement thumbnail images
                     for (int i = 1; i <= 4; i++)
                     {
                         OpenFileDialog imageDialog = new OpenFileDialog
@@ -138,6 +167,7 @@ namespace Capstone_UI
                                 string imgFileName = Path.GetFileName(sourceImgPath);
                                 string destImgPath = Path.Combine(imageTargetDirectory, imgFileName);
 
+                                // Copy the selected image into the local game assets folder
                                 File.Copy(sourceImgPath, destImgPath, overwrite: true);
 
                                 string relativeImgPath = Path.Combine("Games", safeFolderName, "Images", imgFileName).Replace("\\", "/");
@@ -150,10 +180,11 @@ namespace Capstone_UI
                         }
                         else
                         {
-                            break;
+                            break; // Exit loop early if the user cancels
                         }
                     }
 
+                    // Update game image lists and save changes if new images were provided
                     if (newImageList.Count > 0)
                     {
                         selectedGame.ImageList = newImageList;
@@ -174,11 +205,16 @@ namespace Capstone_UI
             }
         }
 
+
+        // ==========================================
+        // Window Exit & Auto-Save
+        // ==========================================
+
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Automatically save any pending text changes for the currently selected game
+                // Automatically capture and save any pending text edits for the currently selected game
                 if (dgGames.SelectedItem is Game selectedGame)
                 {
                     string newTitle = TxtEditTitle.Text.Trim();
@@ -191,7 +227,7 @@ namespace Capstone_UI
                     selectedGame.Description = TxtEditDescription.Text.Trim();
                 }
 
-                // Persist changes to disk JSON file
+                // Persist all data changes (including visibility checkboxes and text edits) to disk
                 GameSelection.SaveGamesList();
             }
             catch (Exception ex)

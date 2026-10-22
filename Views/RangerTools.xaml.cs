@@ -10,6 +10,11 @@ using System.Windows.Controls;
 
 namespace Capstone_UI
 {
+    /// <summary>
+    /// Interaction logic for RangerTools.xaml. Provides administrative management tools 
+    /// for kiosk rangers to add new game builds, edit metadata, manage thumbnails, 
+    /// and safely remove games from the system.
+    /// </summary>
     public partial class RangerTools : Page
     {
         public RangerTools()
@@ -38,10 +43,17 @@ namespace Capstone_UI
             }
         }
 
+        // ==========================================
+        // Add Game Management Workflow
+        // ==========================================
         private void AddGameButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                // Explicitly open the digital keyboard immediately when "Add Game" is clicked
+                // so it's already on screen for the file picker and subsequent prompts.
+                KeyboardHelper.OpenTouchKeyboard();
+
                 string localGamesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games");
                 Directory.CreateDirectory(localGamesFolder);
 
@@ -57,12 +69,20 @@ namespace Capstone_UI
                 {
                     string sourceExePath = openFileDialog.FileName;
 
+                    // Ensure window focus is restored after file dialog closes
+                    Application.Current.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+                    var mainWindow = Window.GetWindow(this);
+                    if (mainWindow != null)
+                    {
+                        mainWindow.Activate();
+                        mainWindow.Focus();
+                    }
+
                     if (GameSelection.GamesList == null)
                     {
                         GameSelection.GamesList = new List<Game>();
                     }
 
-                    // 1. ROBUST FILE-BASED DUPLICATE CHECK
                     FileInfo newFileInfo = new FileInfo(sourceExePath);
 
                     bool isDuplicateGame = GameSelection.GamesList.Any(g =>
@@ -89,7 +109,7 @@ namespace Capstone_UI
 
                     string defaultTitle = Path.GetFileNameWithoutExtension(sourceExePath);
 
-                    // 2. Prompt staff for a custom Title
+                    // Prompt staff for a custom Title (keyboard is already open and ready)
                     string customTitle = KeyboardHelper.PromptWithKeyboard(
                         "Enter the display title for this game:",
                         "Game Title",
@@ -98,14 +118,13 @@ namespace Capstone_UI
                     if (string.IsNullOrWhiteSpace(customTitle)) return;
                     customTitle = customTitle.Trim();
 
-                    // Prevent duplicate titles
                     if (GameSelection.GamesList.Any(g => g.Title.Equals(customTitle, StringComparison.OrdinalIgnoreCase)))
                     {
                         MessageBox.Show("A game with this title already exists. Please choose a unique title.", "Duplicate Title", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
-                    // 3. Prompt staff for a custom Category
+                    // Prompt staff for a custom Category
                     string customCategory = KeyboardHelper.PromptWithKeyboard(
                         "Enter the category (e.g., Water Safety, Puzzle, Added Games):",
                         "Game Category",
@@ -113,7 +132,7 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customCategory)) customCategory = "Added Games";
 
-                    // 4. Prompt staff for a custom Description
+                    // Prompt staff for a custom Description
                     string customDescription = KeyboardHelper.PromptWithKeyboard(
                         "Enter a short description for the game:",
                         "Game Description",
@@ -121,7 +140,6 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customDescription)) customDescription = "Custom added game build.";
 
-                    // 5. COPY GAME FILES TO LOCAL KIOSK DIRECTORY
                     string safeFolderName = string.Join("_", customTitle.Split(Path.GetInvalidFileNameChars()));
 
                     string baseAppDirectory = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -145,7 +163,6 @@ namespace Capstone_UI
                         finalStoredPath = sourceExePath.Substring(baseAppDirectory.Length);
                     }
 
-                    // 6. PROMPT FOR UP TO 4 CUSTOM THUMBNAILS
                     List<string> customImageList = new List<string>();
                     string imageTargetDirectory = Path.Combine(targetDirectory, "Images");
 
@@ -161,6 +178,13 @@ namespace Capstone_UI
 
                         if (imageDialog.ShowDialog() == true)
                         {
+                            Application.Current.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+                            if (mainWindow != null)
+                            {
+                                mainWindow.Activate();
+                                mainWindow.Focus();
+                            }
+
                             try
                             {
                                 Directory.CreateDirectory(imageTargetDirectory);
@@ -170,7 +194,6 @@ namespace Capstone_UI
 
                                 File.Copy(sourceImgPath, destImgPath, overwrite: true);
 
-                                // Build relative path formatted cleanly for WPF image loading
                                 string relativeImgPath = Path.Combine("Games", safeFolderName, "Images", imgFileName).Replace("\\", "/");
                                 customImageList.Add("/" + relativeImgPath);
                             }
@@ -181,18 +204,15 @@ namespace Capstone_UI
                         }
                         else
                         {
-                            // User clicked cancel, stop asking for more thumbnails
                             break;
                         }
                     }
 
-                    // Fallback to default thumbnail if none were provided
                     if (customImageList.Count == 0)
                     {
                         customImageList.Add("/Images/DefaultGameMenu.png");
                     }
 
-                    // 7. Create and save game object
                     Game newGame = new Game
                     {
                         Title = customTitle,
@@ -214,6 +234,11 @@ namespace Capstone_UI
             {
                 MessageBox.Show($"Could not add game: {ex.Message}", "Error Adding Game", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                // Ensure keyboard closes when the entire add-game workflow finishes
+                KeyboardHelper.CloseTouchKeyboard();
+            }
         }
 
         private static void CopyDirectory(string sourceDir, string targetDir)
@@ -233,21 +258,23 @@ namespace Capstone_UI
             }
         }
 
+        // ==========================================
+        // Game List & Detail Management Tools
+        // ==========================================
         private void ManageGameListButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                GameManagerWindow managerWindow = new GameManagerWindow();
-                managerWindow.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Could not open game manager: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            PanelMenuButtons.Visibility = Visibility.Collapsed;
+            PanelManageGames.Visibility = Visibility.Visible;
+            GameListView.ItemsSource = null;
+            GameListView.ItemsSource = GameSelection.GamesList;
         }
 
+        private void CloseManagePanel_Click(object sender, RoutedEventArgs e)
+        {
+            PanelManageGames.Visibility = Visibility.Collapsed;
+            PanelMenuButtons.Visibility = Visibility.Visible;
+        }
 
-        // Loads selected game info into the text boxes
         private void GameListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (GameListView.SelectedItem is Game selectedGame)
@@ -258,44 +285,45 @@ namespace Capstone_UI
             }
         }
 
-        // Saves text edits to the selected game and updates the JSON file
         private void BtnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (GameListView.SelectedItem is Game selectedGame)
                 {
-                    string newTitle = TxtEditTitle.Text.Trim();
-                    if (string.IsNullOrEmpty(newTitle))
-                    {
-                        MessageBox.Show("Game title cannot be empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    selectedGame.Title = newTitle;
+                    // Update metadata from the edit text boxes
+                    selectedGame.Title = TxtEditTitle.Text.Trim();
                     selectedGame.Category = TxtEditCategory.Text.Trim();
                     selectedGame.Description = TxtEditDescription.Text.Trim();
 
+                    // Save to disk
                     GameSelection.SaveGamesList();
+                    GameListView.Items.Refresh();
 
-                    // Refresh list view to show updated title
-                    GameListView.ItemsSource = null;
-                    GameListView.ItemsSource = GameSelection.GamesList;
-
-                    MessageBox.Show("Game details updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Game metadata successfully saved!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Please select a game from the list first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Please select a game to save changes.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not save changes: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error saving changes: {ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
+            finally
+            {
+                // 1. Ensure the digital keyboard is closed when finishing the edit
+                KeyboardHelper.CloseTouchKeyboard();
+            }
+
+            // 2. Automatically close the manage panel and return to the main Ranger Tools menu
+            PanelManageGames.Visibility = Visibility.Collapsed;
+            PanelMenuButtons.Visibility = Visibility.Visible;
         }
 
-        // Replaces the 4 thumbnails on the fly for the selected game
         private void BtnReplaceThumbnails_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -363,6 +391,9 @@ namespace Capstone_UI
             }
         }
 
+        // ==========================================
+        // Remove Game Workflow
+        // ==========================================
         private void RemoveGameButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -386,7 +417,6 @@ namespace Capstone_UI
 
                 if (match != null)
                 {
-                    // 1. DELETE PHYSICAL FILES FROM DISK
                     if (!string.IsNullOrEmpty(match.ExecutablePath))
                     {
                         try
@@ -401,7 +431,6 @@ namespace Capstone_UI
                                 gameDirectory.Contains("Games", StringComparison.OrdinalIgnoreCase) &&
                                 Directory.Exists(gameDirectory))
                             {
-                                // Clear Read-Only attributes so Windows permits deletion
                                 foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories))
                                 {
                                     File.SetAttributes(file, FileAttributes.Normal);
@@ -416,7 +445,6 @@ namespace Capstone_UI
                         }
                     }
 
-                    // 2. DIRECTLY REMOVE FROM LIST AND SAVE PERMANENTLY
                     GameSelection.GamesList.Remove(match);
                     GameSelection.SaveGamesList();
 
@@ -432,5 +460,23 @@ namespace Capstone_UI
                 MessageBox.Show($"Could not remove game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void ChkIsActive_Click(object sender, RoutedEventArgs e)
+        {
+            // Ensure clicking the checkbox retrieves the specific Game instance from its DataContext directly
+            if (sender is CheckBox checkBox && checkBox.DataContext is Game clickedGame)
+            {
+                // TwoWay binding has already updated clickedGame.IsActive to match the checkbox state.
+                // Save the list immediately to disk:
+                GameSelection.SaveGamesList();
+            }
+        }
+
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // Automatically trigger the digital keyboard whenever any edit text box is tapped
+            KeyboardHelper.OpenTouchKeyboard();
+        }
+
     }
 }
