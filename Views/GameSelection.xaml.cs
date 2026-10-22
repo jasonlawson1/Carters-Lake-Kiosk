@@ -158,14 +158,6 @@ namespace Capstone_UI
                     MessageBox.Show($"Game executable not found at:\n{fullExecutablePath}\n\nMake sure the USB drive or game folder is accessible.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                // creates a window so the user can enter their name and if they are an adult or not
-                var prompt = new PlayerInfoWindow { Owner = Window.GetWindow(this) };
-
-                if (prompt.ShowDialog() != true)
-                    return;   // they cancelled, so don't launch
-                
-                string username = prompt.Username;
-                bool isAdult = prompt.IsAdult;
                 try
                 {
                     LoadingOverlay.Visibility = Visibility.Visible;
@@ -184,18 +176,27 @@ namespace Capstone_UI
                         return;
                     }
 
-                    int userId = App.Db.InsertUser(username, isAdult);
                     var stopwatch = Stopwatch.StartNew();
-
                     await process.WaitForExitAsync();   // waits here while they play
-
                     stopwatch.Stop();
+
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
+
+                    // Game is over: bring the kiosk back to the front, then ask for their info
+                    var owner = Window.GetWindow(this);
+                    owner?.Activate();
+
+                    var prompt = new PlayerInfoWindow { Owner = owner };
+                    if (prompt.ShowDialog() != true)
+                        return;   // they skipped the prompt, so nothing is saved
+
+                    int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult);
                     int score = 0;   // placeholder until you decide how games report scores
                     App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Could not launch game:\n{ex.Message}", "Launch Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Something went wrong:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 finally
                 {

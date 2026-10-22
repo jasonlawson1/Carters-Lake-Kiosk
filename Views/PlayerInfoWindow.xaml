@@ -19,7 +19,7 @@
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" IsCancel="True" Width="110" Height="44" Margin="0,0,12,0" Background="#FFB90000"/>
-            <Button Content="Play!" IsDefault="True" Width="140" Height="44" Click="Submit_Click" Background="#FFB90000"/>
+            <Button Content="Done" IsDefault="True" Width="140" Height="44" Click="Submit_Click" Background="#FFB90000"/>
         </StackPanel>
     </StackPanel>
 </Window>
