@@ -215,7 +215,7 @@ namespace Capstone_UI
 
                     Game newGame = new Game
                     {
-                        Title = customTitle,
+                        Title = customTitle.Trim(),
                         ExecutablePath = finalStoredPath,
                         Category = customCategory.Trim(),
                         Description = customDescription.Trim(),
@@ -223,7 +223,8 @@ namespace Capstone_UI
                         ImageList = customImageList,
                         IsActive = true
                     };
-
+                    
+                    newGame.Id = App.Db.InsertGame(newGame.Title);
                     GameSelection.GamesList.Add(newGame);
                     GameSelection.SaveGamesList();
 

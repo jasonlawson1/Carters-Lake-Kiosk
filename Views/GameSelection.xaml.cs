@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Capstone_UI.Views;
 
 namespace Capstone_UI
 {
@@ -73,6 +74,10 @@ namespace Capstone_UI
         {
             // Force a reload from disk every time the page loads to stay in sync with administrative updates
             LoadGamesListFromDisk();
+            
+            foreach (var game in GamesList)
+                App.Db.EnsureGame(game.Id, game.Title);
+            // Only display games that are marked as active/visible for kiosk visitors
 
             // Filter the library to display only games marked active and visible for kiosk visitors
             var activeGames = GamesList.Where(g => g.IsActive).ToList();
@@ -256,14 +261,28 @@ namespace Capstone_UI
                     MessageBox.Show($"Game executable not found at:\n{fullExecutablePath}\n\nMake sure the USB drive or game folder is accessible.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-
                 try
                 {
                     // Show visual loading overlay while launching process initializes
                     LoadingOverlay.Visibility = Visibility.Visible;
 
-                    await Task.Run(() =>
+                    var startInfo = new ProcessStartInfo
                     {
+                        FileName = fullExecutablePath,
+                        WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
+                        UseShellExecute = true
+                    };
+
+                    using var process = Process.Start(startInfo);
+                    if (process == null)
+                    {
+                        MessageBox.Show("The game didn't start.");
+                        return;
+                    }
+
+                    var stopwatch = Stopwatch.StartNew();
+                    await process.WaitForExitAsync();   // waits here while they play
+                    stopwatch.Stop();
                         ProcessStartInfo startInfo = new ProcessStartInfo
                         {
                             FileName = fullExecutablePath,
@@ -276,11 +295,26 @@ namespace Capstone_UI
                     });
 
                     LoadingOverlay.Visibility = Visibility.Collapsed;
+
+                    // Game is over: bring the kiosk back to the front, then ask for their info
+                    var owner = Window.GetWindow(this);
+                    owner?.Activate();
+
+                    var prompt = new PlayerInfoWindow { Owner = owner };
+                    if (prompt.ShowDialog() != true)
+                        return;   // they skipped the prompt, so nothing is saved
+
+                    int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult);
+                    int score = 0;   // placeholder until you decide how games report scores
+                    App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds);
                 }
                 catch (Exception ex)
                 {
+                    MessageBox.Show($"Something went wrong:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
                     LoadingOverlay.Visibility = Visibility.Collapsed;
-                    MessageBox.Show($"Could not launch game:\n{ex.Message}", "Launch Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
@@ -337,6 +371,7 @@ namespace Capstone_UI
                 {
                     new Game
                     {
+                        Id = 1,
                         Title = "I Spy Water Safety",
                         ImagePath = "/Images/I Spy Water Safety Menu.png",
                         ImageList = new List<string> { "/Images/I Spy Water Safety Menu.png", "/Images/I Spy Water Safety Character Select.png", "/Images/I Spy Water Safety Gameplay.png" },
@@ -347,6 +382,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 2,
                         Title = "Water Resource Game",
                         ImagePath = "/Images/Water Management Menu.png",
                         ImageList = new List<string> { "/Images/Water Management Menu.png", "/Images/Water Management Gameplay.png", "/Images/Water Management Gameplay 2.png", "/Images/Water Management Gameplay 3.png" },
@@ -357,6 +393,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 3,
                         Title = "Carters Lake Boating Safety",
                         ImagePath = "/Images/A Boating Game Menu.png",
                         ImageList = new List<string> { "/Images/A Boating Game Menu.png", "/Images/A Boating Game Character Select.png", "/Images/A Boating Game Gameplay.png", "/Images/A Boating Game GamePlay 2.png", "/Images/A Boating Game Quiz.png" },
@@ -367,6 +404,7 @@ namespace Capstone_UI
                     },
                     new Game
                     {
+                        Id = 4,
                         Title = "Drawing The Night Sky",
                         ImagePath = "/Images/Drawing The Night Sky Menu.png",
                         ImageList = new List<string> { "/Images/Drawing The Night Sky Menu.png", "/Images/Drawing The Night Sky Gameplay 1.png", "/Images/Drawing The Night Sky Gameplay 2.png", "/Images/Drawing The Night Sky gameplay 3.png" },

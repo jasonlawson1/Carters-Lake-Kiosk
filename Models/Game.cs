@@ -9,6 +9,7 @@ namespace Capstone_UI.Models
     /// </summary>
     public class Game
     {
+        public int Id { get; set; }
         // ==========================================
         // Metadata & Descriptive Properties
         // ==========================================
