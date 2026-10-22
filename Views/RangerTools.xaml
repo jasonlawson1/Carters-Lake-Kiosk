@@ -5,69 +5,200 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Capstone_UI"
       mc:Ignorable="d" 
-      d:DesignHeight="1080" d:DesignWidth="1920"
-      Background="White"
+      d:DesignHeight="800" d:DesignWidth="1024"
       Title="RangerTools">
 
-    <!-- Ranger Tools UI elements. -->
+    <Page.Resources>
+        <!-- Nature Color Brushes -->
+        <SolidColorBrush x:Key="ForestGreen" Color="#1E3F27"/>
+        <SolidColorBrush x:Key="ForestGreenHover" Color="#295636"/>
+        <SolidColorBrush x:Key="AccentGold" Color="#C29B38"/>
+        <SolidColorBrush x:Key="ExitRed" Color="#A6192E"/>
+
+        <!-- Large Centered Touch Button Style -->
+        <Style x:Key="RangerToolButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource ForestGreen}"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="18" 
+                                BorderBrush="{StaticResource AccentGold}" 
+                                BorderThickness="2"
+                                Padding="15">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="15" ShadowDepth="5" Direction="270" Color="Black" Opacity="0.3"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource ForestGreenHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Edit Panel Action Button Style -->
+        <Style x:Key="EditActionButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource ForestGreen}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                CornerRadius="10" 
+                                BorderBrush="{StaticResource AccentGold}" 
+                                BorderThickness="1.5"
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
     <Grid>
-        <Rectangle HorizontalAlignment="Center" Height="73" Margin="0,1007,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
-        <Rectangle HorizontalAlignment="Center" Height="46" Margin="0,961,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
-        <Rectangle HorizontalAlignment="Center" Height="46" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
-        <Rectangle HorizontalAlignment="Center" Height="49" Margin="0,46,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
+        <!-- CENTRAL "BUBBLY BOX" CARD CONTAINER -->
+        <Border Background="#E6F5F2EB" 
+                BorderBrush="{StaticResource AccentGold}" 
+                BorderThickness="2.5" 
+                CornerRadius="32" 
+                Padding="35,20,35,20" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Top" 
+                Margin="0,10,0,0"
+                Width="950" Height="660">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="10" Direction="270" Color="Black" Opacity="0.35"/>
+            </Border.Effect>
 
-        <Image Margin="10,10,1814,993" Source="/Images/Army Corp Logo.jpg" Stretch="Fill"/>
-        <Button x:Name="logoButton" Content="&#xD;&#xA;" HorizontalAlignment="Left" Height="77" Margin="10,10,0,993" Width="96" Click="logoExitRangerTools" Background="Transparent"/>
-        <Button x:Name="rangerToolsBackButton" Content="Back" HorizontalAlignment="Left" Height="76" Margin="39,984,0,0" VerticalAlignment="Top" Width="348" Background="#FFB90000" FontSize="48" BorderBrush="Black" Click="rangerToolsBackButton_Click_1"/>
+            <Grid>
+                <!-- 1. MAIN MENU BUTTONS (Centered Stack) -->
+                <StackPanel x:Name="PanelMenuButtons" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Visible">
+                    <TextBlock Text="RANGER ADMINISTRATION TOOLS" FontSize="24" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Center" Margin="0,0,0,30"/>
 
-        <!-- Header Banner & Title -->
-        <Rectangle HorizontalAlignment="Center" Height="121" Margin="0,114,0,0" Stroke="Black" VerticalAlignment="Top" Width="846" Fill="#FFD6D6D6"/>
-        <TextBlock Text="Ranger Tools" FontSize="72" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,114,0,0" IsHitTestVisible="False"/>
-
-        <!-- Main Content Area: Split into Menu and Game Management Panel -->
-        <Grid Margin="0,255,0,0" VerticalAlignment="Top" HorizontalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="500"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left: Buttons StackPanel -->
-            <StackPanel Orientation="Vertical" Grid.Column="0" HorizontalAlignment="Center">
-                <Button Content="Add Game" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="AddGameButton_Click"/>
-                <Button Content="Manage Game List" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="ManageGameListButton_Click"/>
-                <Button Content="Remove Game" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="RemoveGameButton_Click"/>
-                <Button Content="Analytic Tools" Width="480" Height="143" Margin="0,0,0,35" FontSize="55"/>
-            </StackPanel>
-
-            <!-- Right: Game Management & Edit Panel (Initially Hidden) -->
-            <StackPanel x:Name="PanelManageGames" Grid.Column="1" Width="700" Margin="30,0,0,0" Visibility="Collapsed">
-                <TextBlock Text="Select a Game to Edit:" FontSize="22" FontWeight="Bold" Margin="0,0,0,10"/>
-
-                <!-- Game Selector List -->
-                <ListBox x:Name="GameListView" Height="180" FontSize="18" SelectionChanged="GameListView_SelectionChanged" Margin="0,0,0,20">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Title}" FontSize="18" Padding="5"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <!-- Edit Fields -->
-                <TextBlock Text="Title:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                <TextBox x:Name="TxtEditTitle" Height="40" FontSize="18" Padding="5" Margin="0,0,0,15"/>
-
-                <TextBlock Text="Category:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                <TextBox x:Name="TxtEditCategory" Height="40" FontSize="18" Padding="5" Margin="0,0,0,15"/>
-
-                <TextBlock Text="Description:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                <TextBox x:Name="TxtEditDescription" Height="80" AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" Padding="5" Margin="0,0,0,20"/>
-
-                <!-- Action Buttons -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="BtnReplaceThumbnails" Content="Replace Thumbnails (4)" Width="240" Height="50" FontSize="18" Margin="0,0,15,0" Click="BtnReplaceThumbnails_Click"/>
-                    <Button x:Name="BtnSaveChanges" Content="Save Changes" Width="200" Height="50" FontSize="18" Background="#2C5E3B" Foreground="White" FontWeight="Bold" Click="BtnSaveChanges_Click"/>
+                    <Button Content="➕ Add Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="AddGameButton_Click"/>
+                    <Button Content="📝 Manage Game List" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="ManageGameListButton_Click"/>
+                    <Button Content="🗑️ Remove Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="RemoveGameButton_Click"/>
+                    <Button Content="📊 Analytic Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80"/>
                 </StackPanel>
-            </StackPanel>
-        </Grid>
+
+                <!-- 2. GAME MANAGEMENT & EDIT PANEL -->
+                <StackPanel x:Name="PanelManageGames" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
+
+                    <!-- Header -->
+                    <TextBlock Text="Edit Game Metadata &amp; Visibility" 
+                               FontSize="20" 
+                               FontWeight="Black" 
+                               Foreground="{StaticResource ForestGreen}" 
+                               HorizontalAlignment="Left"
+                               Margin="0,0,0,8"/>
+
+                    <!-- Game Selector Scrollable List Box -->
+                    <TextBlock Text="Select a Game (Check box to toggle kiosk visibility):" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
+                    <ListBox x:Name="GameListView" 
+         Height="110" 
+         FontSize="15" 
+         SelectionChanged="GameListView_SelectionChanged" 
+         Margin="0,0,0,10" 
+         BorderBrush="{StaticResource AccentGold}" 
+         BorderThickness="1.5"
+         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Width="820" Margin="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Game Title -->
+                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Padding="4"/>
+
+                                    <!-- Dynamic Checkbox - Toggles and saves instantly without requiring row selection -->
+                                    <CheckBox Grid.Column="1" 
+                          Content="Visible" 
+                          IsChecked="{Binding IsActive, Mode=TwoWay}" 
+                          Click="ChkIsActive_Click"
+                          FontSize="14" 
+                          FontWeight="Bold" 
+                          Foreground="{StaticResource ForestGreen}" 
+                          VerticalAlignment="Center" 
+                          HorizontalAlignment="Right" 
+                          Cursor="Hand"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Uncompressed Edit Fields -->
+                    <TextBlock Text="Title:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
+                    <TextBox x:Name="TxtEditTitle" Height="38" FontSize="15" Padding="8,6" Margin="0,0,0,8" BorderBrush="{StaticResource AccentGold}" BorderThickness="1" GotFocus="TextBox_GotFocus"/>
+
+                    <TextBlock Text="Category:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
+                    <TextBox x:Name="TxtEditCategory" Height="38" FontSize="15" Padding="8,6" Margin="0,0,0,8" BorderBrush="{StaticResource AccentGold}" BorderThickness="1" GotFocus="TextBox_GotFocus"/>
+
+                    <TextBlock Text="Description:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
+                    <TextBox x:Name="TxtEditDescription" 
+                             Height="75" 
+                             AcceptsReturn="True" 
+                             TextWrapping="Wrap" 
+                             FontSize="14" 
+                             Padding="8" 
+                             Margin="0,0,0,10" 
+                             BorderBrush="{StaticResource AccentGold}" 
+                             BorderThickness="1"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             GotFocus="TextBox_GotFocus"/>
+
+                    <!-- Bottom Action Buttons Row (Back, Thumbnails, Save) -->
+                    <Grid VerticalAlignment="Bottom">
+                        <!-- Left: Back Button -->
+                        <Button Content="⬅️ Back" 
+                                Style="{StaticResource EditActionButtonStyle}" 
+                                Background="{StaticResource ExitRed}" 
+                                HorizontalAlignment="Left" 
+                                Click="CloseManagePanel_Click" 
+                                Width="110" Height="42"/>
+
+                        <!-- Right: Thumbnails & Save Changes Buttons -->
+                        <!-- Right: Thumbnails & Save & Close Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="BtnReplaceThumbnails" Content="📷 Replace Thumbnails (4)" Style="{StaticResource EditActionButtonStyle}" Height="42" Margin="0,0,10,0" Click="BtnReplaceThumbnails_Click"/>
+                            <Button x:Name="BtnSaveChanges" Content="💾 Save &amp; Close" Style="{StaticResource EditActionButtonStyle}" Background="#2C5E3B" Height="42" Click="BtnSaveChanges_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

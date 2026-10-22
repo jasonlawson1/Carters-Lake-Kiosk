@@ -1,6 +1,7 @@
 ﻿using Capstone_UI.Models;
 using Capstone_UI.Services;
 using Microsoft.VisualBasic;
+using System;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,38 +15,101 @@ using System.Windows.Shapes;
 
 namespace Capstone_UI
 {
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml. Acts as the main shell and container 
+    /// for kiosk navigation, frame management, and administrative entry points.
+    /// </summary>
     public partial class MainWindow : Window
     {
+        // ==========================================
+        // Constructor & Lifecycle
+        // ==========================================
+
         public MainWindow()
         {
-            InitializeComponent(); //Connects the front end to the back end. It must stay at the top of the code. DO NOT DELETE!
+            // Connects the XAML front-end layout to the code-behind. 
+            // CRITICAL: Must stay at the top of the constructor and never be deleted!
+            InitializeComponent();
         }
 
-        private void menuExitButton(object sender, RoutedEventArgs e) //This is the code for the exit button in the menu bar. It will ask the user if they are sure they want to exit the application. If they click yes, the application will close. If they click no, the application will stay open.
-        {
-            try
-            {
-                KeyboardHelper.OpenTouchKeyboard();
-                AdminAuth.RequestAppExit();
-            }
-            finally
-            {
-                KeyboardHelper.CloseTouchKeyboard();
-            }
-        }
 
-        private void Play_Button_Click(object sender, RoutedEventArgs e) //This is the code for the play button. It will navigate to the GameSelection page when clicked.
+        // ==========================================
+        // Navigation Event Handlers
+        // ==========================================
+
+        /// <summary>
+        /// Handles the play button click, navigating the user to the GameSelection page library.
+        /// </summary>
+        private void Play_Button_Click(object sender, RoutedEventArgs e)
         {
             MainFrame.Navigate(new GameSelection());
         }
 
-        private void MainMenu_Button_Click(object sender, RoutedEventArgs e) // This is the code to return to the Main Menu view when clicked.
+        /// <summary>
+        /// Automatically updates the adaptive footer action button (Switching between Exit Kiosk and Back)
+        /// and hides/shows the Staff Tools button depending on the current page.
+        /// </summary>
+        private void MainFrame_Navigated(object sender, NavigationEventArgs e)
         {
-            // Replace 'MainMenuView' with your actual Main Menu page class name if it differs
+            SolidColorBrush redBrush = (TryFindResource("ExitRed") as SolidColorBrush)
+                ?? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A6192E"));
+
+            if (MainFrame.CanGoBack)
+            {
+                FooterActionButton.Content = "⬅️ Back";
+                FooterActionButton.Background = redBrush;
+            }
+            else
+            {
+                FooterActionButton.Content = "🛑 Exit Kiosk";
+                FooterActionButton.Background = redBrush;
+            }
+
+            // Hide the Staff Tools button when viewing Ranger Tools, show it everywhere else
+            if (e.Content is RangerTools)
+            {
+                RangerButton.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                RangerButton.Visibility = Visibility.Visible;
+            }
+        }
+
+        /// <summary>
+        /// Handles the adaptive footer action button click: goes back if on a subpage, 
+        /// or triggers the exit sequence if on the main menu.
+        /// </summary>
+        private void FooterActionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (MainFrame.CanGoBack)
+            {
+                MainFrame.GoBack();
+            }
+            else
+            {
+                menuExitButton(sender, e);
+            }
+        }
+
+        /// <summary>
+        /// Resets or returns the main view frame back to the primary menu view.
+        /// </summary>
+        private void MainMenu_Button_Click(object sender, RoutedEventArgs e)
+        {
             MainFrame.Navigate(new MainWindow());
         }
 
-        private void logoExit(object sender, RoutedEventArgs e) //This is the code for the logo button. It will ask the user if they are sure they want to exit the application. If they click yes, the application will close. If they click no, the application will stay open.
+
+        // ==========================================
+        // Administrative & Exit Actions
+        // ==========================================
+
+        /// <summary>
+        /// Triggers the secure application exit sequence from the top menu bar button 
+        /// with touch keyboard support and admin verification.
+        /// </summary>
+        private void menuExitButton(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -58,7 +122,28 @@ namespace Capstone_UI
             }
         }
 
-        private void Ranger_Button_Click(object sender, RoutedEventArgs e) //This is the code for the ranger button. It will navigate to the RangerTools page when clicked.
+        /// <summary>
+        /// Triggers the secure application exit sequence from the kiosk logo button 
+        /// with touch keyboard support and admin verification across all screens.
+        /// </summary>
+        private void logoExit(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                KeyboardHelper.OpenTouchKeyboard();
+                AdminAuth.RequestAppExit();
+            }
+            finally
+            {
+                KeyboardHelper.CloseTouchKeyboard();
+            }
+        }
+
+        /// <summary>
+        /// Prompts for administrative password verification before allowing entry 
+        /// into the protected RangerTools management portal.
+        /// </summary>
+        private void Ranger_Button_Click(object sender, RoutedEventArgs e)
         {
             bool isAuthenticated = false;
 
