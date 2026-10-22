@@ -261,6 +261,7 @@ namespace Capstone_UI
                     MessageBox.Show($"Game executable not found at:\n{fullExecutablePath}\n\nMake sure the USB drive or game folder is accessible.", "Game Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 try
                 {
                     // Show visual loading overlay while launching process initializes
@@ -269,7 +270,7 @@ namespace Capstone_UI
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = fullExecutablePath,
-                        WorkingDirectory = System.IO.Path.GetDirectoryName(fullExecutablePath),
+                        WorkingDirectory = Path.GetDirectoryName(fullExecutablePath),
                         UseShellExecute = true
                     };
 
@@ -281,18 +282,8 @@ namespace Capstone_UI
                     }
 
                     var stopwatch = Stopwatch.StartNew();
-                    await process.WaitForExitAsync();   // waits here while they play
+                    await process.WaitForExitAsync();   // Waits here while they play
                     stopwatch.Stop();
-                        ProcessStartInfo startInfo = new ProcessStartInfo
-                        {
-                            FileName = fullExecutablePath,
-                            WorkingDirectory = Path.GetDirectoryName(fullExecutablePath),
-                            UseShellExecute = true
-                        };
-
-                        Process.Start(startInfo);
-                        Task.Delay(1500).Wait(); // Brief pause for smooth transition
-                    });
 
                     LoadingOverlay.Visibility = Visibility.Collapsed;
 
@@ -302,10 +293,10 @@ namespace Capstone_UI
 
                     var prompt = new PlayerInfoWindow { Owner = owner };
                     if (prompt.ShowDialog() != true)
-                        return;   // they skipped the prompt, so nothing is saved
+                        return;   // They skipped the prompt, so nothing is saved
 
                     int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult);
-                    int score = 0;   // placeholder until you decide how games report scores
+                    int score = 0;   // Placeholder until you decide how games report scores
                     App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds);
                 }
                 catch (Exception ex)

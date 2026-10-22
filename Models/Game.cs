@@ -9,10 +9,11 @@ namespace Capstone_UI.Models
     /// </summary>
     public class Game
     {
-        public int Id { get; set; }
         // ==========================================
         // Metadata & Descriptive Properties
         // ==========================================
+
+        public int Id { get; set; }
 
         /// <summary>
         /// Gets or sets the display title of the game.

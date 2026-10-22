@@ -22,32 +22,35 @@
 
             <!--Properties for the left sidebar. Defines the layout and appearance of the game list. Ensures proper spacing and visual hierarchy.-->
             <Border Grid.Column="0" Background="#EAEAEA" BorderBrush="#AAAAAA" BorderThickness="0,0,2,0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
-                    <ListBox x:Name="GameListBox" 
-                     BorderThickness="0" 
-                     Background="Transparent" 
-                     Margin="10"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     SelectionChanged="GameListBox_SelectionChanged">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="MinHeight" Value="60"/>
-                                <Setter Property="Margin" Value="0,5"/>
-                                <Setter Property="Padding" Value="15,10"/>
-                                <Setter Property="FontSize" Value="22"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Background" Value="White"/>
-                                <Setter Property="BorderBrush" Value="#CCCCCC"/>
-                                <Setter Property="BorderThickness" Value="1"/>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </ScrollViewer>
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Margin="0,0,0,90">
+                        <ListBox x:Name="GameListBox" 
+                         BorderThickness="0" 
+                         Background="Transparent" 
+                         Margin="10"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="GameListBox_SelectionChanged">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="MinHeight" Value="60"/>
+                                    <Setter Property="Margin" Value="0,5"/>
+                                    <Setter Property="Padding" Value="15,10"/>
+                                    <Setter Property="FontSize" Value="22"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Background" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="#CCCCCC"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+
+                </Grid>
             </Border>
 
             <!--Properties for the right sidebar. Defines the layout and appearance of the game details. Ensures proper spacing and visual hierarchy.-->
