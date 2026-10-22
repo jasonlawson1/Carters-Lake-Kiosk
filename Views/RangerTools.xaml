@@ -9,7 +9,7 @@
       Background="White"
       Title="RangerTools">
 
-    <!-- Ranger Tools UI elements. Stackpanel keeps buttons aligned in the center. -->
+    <!-- Ranger Tools UI elements. -->
     <Grid>
         <Rectangle HorizontalAlignment="Center" Height="73" Margin="0,1007,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
         <Rectangle HorizontalAlignment="Center" Height="46" Margin="0,961,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
@@ -20,15 +20,54 @@
         <Button x:Name="logoButton" Content="&#xD;&#xA;" HorizontalAlignment="Left" Height="77" Margin="10,10,0,993" Width="96" Click="logoExitRangerTools" Background="Transparent"/>
         <Button x:Name="rangerToolsBackButton" Content="Back" HorizontalAlignment="Left" Height="76" Margin="39,984,0,0" VerticalAlignment="Top" Width="348" Background="#FFB90000" FontSize="48" BorderBrush="Black" Click="rangerToolsBackButton_Click_1"/>
 
-        <!-- Header Banner & Title (Fixed element bounds so clicks pass through) -->
-        <Rectangle HorizontalAlignment="Center" Height="148" Margin="0,128,0,0" Stroke="Black" VerticalAlignment="Top" Width="1140" Fill="#FFD6D6D6"/>
-        <TextBlock Text="Ranger Tools" FontSize="72" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,153,0,0" IsHitTestVisible="False"/>
+        <!-- Header Banner & Title -->
+        <Rectangle HorizontalAlignment="Center" Height="121" Margin="0,114,0,0" Stroke="Black" VerticalAlignment="Top" Width="846" Fill="#FFD6D6D6"/>
+        <TextBlock Text="Ranger Tools" FontSize="72" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,114,0,0" IsHitTestVisible="False"/>
 
-        <!-- Buttons StackPanel -->
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,340,0,0">
-            <Button Content="Add Game" Width="447" Height="143" Margin="0,0,0,35" FontSize="55" HorizontalAlignment="Center" VerticalAlignment="Center" Click="AddGameButton_Click"/>
-            <Button Content="Remove Game" Width="447" Height="143" Margin="0,0,0,35" FontSize="55" Click="RemoveGameButton_Click"/>
-            <Button Content="Analytic Tools" Width="447" Height="143" Margin="0,0,0,35" FontSize="55"/>
-        </StackPanel>
+        <!-- Main Content Area: Split into Menu and Game Management Panel -->
+        <Grid Margin="0,255,0,0" VerticalAlignment="Top" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="500"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Buttons StackPanel -->
+            <StackPanel Orientation="Vertical" Grid.Column="0" HorizontalAlignment="Center">
+                <Button Content="Add Game" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="AddGameButton_Click"/>
+                <Button Content="Manage Game List" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="ManageGameListButton_Click"/>
+                <Button Content="Remove Game" Width="480" Height="143" Margin="0,0,0,35" FontSize="55" Click="RemoveGameButton_Click"/>
+                <Button Content="Analytic Tools" Width="480" Height="143" Margin="0,0,0,35" FontSize="55"/>
+            </StackPanel>
+
+            <!-- Right: Game Management & Edit Panel (Initially Hidden) -->
+            <StackPanel x:Name="PanelManageGames" Grid.Column="1" Width="700" Margin="30,0,0,0" Visibility="Collapsed">
+                <TextBlock Text="Select a Game to Edit:" FontSize="22" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <!-- Game Selector List -->
+                <ListBox x:Name="GameListView" Height="180" FontSize="18" SelectionChanged="GameListView_SelectionChanged" Margin="0,0,0,20">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Title}" FontSize="18" Padding="5"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Edit Fields -->
+                <TextBlock Text="Title:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <TextBox x:Name="TxtEditTitle" Height="40" FontSize="18" Padding="5" Margin="0,0,0,15"/>
+
+                <TextBlock Text="Category:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <TextBox x:Name="TxtEditCategory" Height="40" FontSize="18" Padding="5" Margin="0,0,0,15"/>
+
+                <TextBlock Text="Description:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <TextBox x:Name="TxtEditDescription" Height="80" AcceptsReturn="True" TextWrapping="Wrap" FontSize="16" Padding="5" Margin="0,0,0,20"/>
+
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnReplaceThumbnails" Content="Replace Thumbnails (4)" Width="240" Height="50" FontSize="18" Margin="0,0,15,0" Click="BtnReplaceThumbnails_Click"/>
+                    <Button x:Name="BtnSaveChanges" Content="Save Changes" Width="200" Height="50" FontSize="18" Background="#2C5E3B" Foreground="White" FontWeight="Bold" Click="BtnSaveChanges_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

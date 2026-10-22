@@ -9,28 +9,66 @@
         Title="MainWindow" Height="1080" Width="1920"
         WindowState="Maximized"
         WindowStyle="None"
-        ResizeMode="NoResize"
->
+        ResizeMode="NoResize">
 
-    <!-- Main Grid containing UI elements. Buttons are hyperlinked to other pages. Castle logo in top left acts as quick exit. Path directories for buttons and logo are found in MainWindow.xaml.cs -->
+    <!-- Main Grid structured with 3 rows: Top and bottom are fixed, middle takes up remaining space and scales cleanly -->
     <Grid x:Name="MainGrid" Background="White">
-        <Image Margin="354,196,354,278" Source= "/Images/Carter's Lake.jpg" Stretch="Fill"/>
-        <Image x:Name="Army_Corp_Logo" HorizontalAlignment="Left" Height="123" VerticalAlignment="Top" Width="189"/>
-        <Rectangle x:Name="BottomBlackBar" HorizontalAlignment="Center" Height="73" Margin="0,1007,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
-        <Rectangle x:Name="TopBlackBar" HorizontalAlignment="Center" Height="46" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
-        <Rectangle x:Name="BottomGrayBar" HorizontalAlignment="Center" Height="46" Margin="0,961,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
-        <Rectangle x:Name="TopGrayBar" HorizontalAlignment="Center" Height="49" Margin="0,46,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
-        <Rectangle x:Name="GrayBoxForTitle" HorizontalAlignment="Center" Height="82" Margin="0,109,0,0" Stroke="Black" VerticalAlignment="Top" Width="1476" Fill="#FFD6D6D6"/>
-        <Button x:Name="Exit_Button" Content="Exit" HorizontalAlignment="Left" Height="76" Margin="39,984,0,0" VerticalAlignment="Top" Width="348" Background="#FFB90000" FontSize="48" BorderBrush="Black" Click="menuExitButton"/>
-        <Button x:Name="Play_Button" Content="PLAY" HorizontalAlignment="Center" Height="94" Margin="0,834,0,0" VerticalAlignment="Top" Width="528" Background="#FFD6D6D6" FontSize="48" BorderBrush="Black" Click="Play_Button_Click"/>
-        <Button x:Name="Ranger_Button" Content="Ranger Tools" HorizontalAlignment="Right" Height="76" Margin="0,984,39,0" VerticalAlignment="Top" Width="348" Background="#FFD6D6D6" FontSize="48" BorderBrush="Black" Click="Ranger_Button_Click"/>
-        <TextBlock x:Name="MenuTitle" HorizontalAlignment="Left" Margin="354,95,0,0" TextWrapping="Wrap" Text="Welcome To Carters Lake Visitor Center" VerticalAlignment="Top" Height="93" Width="1344" FontSize="72"/>
-        <Image x:Name="CartersLakeImage" Margin="10,10,1814,993" Source= "/Images/Army Corp Logo.jpg" Stretch="Fill"/>
-        <Button x:Name="logoButton" Content="&#xD;&#xA;" HorizontalAlignment="Left" Height="77" Margin="10,10,0,0" VerticalAlignment="Top" Width="96" Background="Transparent" Click="logoExit"/>
-        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="95"/>
+            <!-- Fixed Top Header -->
+            <RowDefinition Height="*"/>
+            <!-- Flexible Middle Content (Resizes dynamically) -->
+            <RowDefinition Height="119"/>
+            <!-- Fixed Bottom Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ================= TOP HEADER SECTION ================= -->
+        <Grid Grid.Row="0">
+            <Rectangle x:Name="TopBlackBar" Height="46" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="Black"/>
+            <Rectangle x:Name="TopGrayBar" Height="49" Margin="0,46,0,0" Stroke="Black" VerticalAlignment="Top" Width="1920" Fill="#FF777777"/>
+            <Image x:Name="CartersLakeLogoTopLeft" Margin="10,10,0,0" Source="/Images/Army Corp Logo.jpg" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" Width="96" Height="77"/>
+            <Button x:Name="logoButton" Content="" HorizontalAlignment="Left" Height="77" Margin="10,10,0,0" VerticalAlignment="Top" Width="96" Background="Transparent" Click="logoExit"/>
+        </Grid>
+
+        <!-- ================= MIDDLE CONTENT SECTION ================= -->
+        <!-- Wrapped in a Viewbox so everything scales down smoothly if vertical space tightens -->
+        <Viewbox Grid.Row="1" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Grid Width="1920" Height="800">
+                <!-- Title Area -->
+                <Rectangle x:Name="GrayBoxForTitle" HorizontalAlignment="Center" Height="82" Margin="0,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="1550" Fill="#FFD6D6D6"/>
+                <TextBlock x:Name="MenuTitle" HorizontalAlignment="Center" Margin="0,5,0,0" TextWrapping="Wrap" Text="Welcome To Carters Lake Visitor Center" VerticalAlignment="Top" Height="93" Width="1500" FontSize="72" TextAlignment="Center"/>
+
+                <!-- Central Container: Centers image and forces Play button underneath it -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,60,0,0">
+                    <!-- The Main Image -->
+                    <Image Source="/Images/Carter's Lake.jpg" 
+                           Stretch="Fill" 
+                           Width="1050" 
+                           Height="480" 
+                           HorizontalAlignment="Center"/>
+
+                    <!-- The Play Button -->
+                    <Button x:Name="Play_Button" 
+                            Content="PLAY" 
+                            Width="528" 
+                            Height="94" 
+                            Margin="0,25,0,0" 
+                            Background="#FFD6D6D6" 
+                            FontSize="48" 
+                            BorderBrush="Black" 
+                            Click="Play_Button_Click"/>
+                </StackPanel>
+            </Grid>
+        </Viewbox>
+
+        <!-- ================= BOTTOM FOOTER SECTION ================= -->
+        <Grid Grid.Row="2">
+            <Rectangle x:Name="BottomGrayBar" Height="46" VerticalAlignment="Top" Width="1920" Stroke="Black" Fill="#FF777777"/>
+            <Rectangle x:Name="BottomBlackBar" Height="73" Margin="0,46,0,0" VerticalAlignment="Top" Width="1920" Stroke="Black" Fill="Black"/>
+            <Button x:Name="Exit_Button" Content="Exit" HorizontalAlignment="Left" Height="76" Margin="39,23,0,0" VerticalAlignment="Top" Width="348" Background="#FFB90000" FontSize="48" BorderBrush="Black" Click="menuExitButton"/>
+            <Button x:Name="Ranger_Button" Content="Ranger Tools" HorizontalAlignment="Right" Height="76" Margin="0,23,39,0" VerticalAlignment="Top" Width="348" Background="#FFD6D6D6" FontSize="48" BorderBrush="Black" Click="Ranger_Button_Click"/>
+        </Grid>
+
+        <Frame x:Name="MainFrame" Grid.RowSpan="3" NavigationUIVisibility="Hidden"/>
     </Grid>
-
-
-
-
 </Window>

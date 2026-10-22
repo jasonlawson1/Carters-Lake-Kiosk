@@ -1,6 +1,10 @@
 ﻿using Capstone_UI.Models;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -28,6 +32,9 @@ namespace Capstone_UI
         private DispatcherTimer _imageCycleTimer;
         private int _currentImageIndex = 0;
 
+        // Path constant to the prebundled default fallback image
+        private const string DEFAULT_FALLBACK_IMAGE = "pack://application:,,,/Images/DefaultGameMenu.png";
+
         public GameSelection()
         {
             InitializeComponent();
@@ -42,17 +49,18 @@ namespace Capstone_UI
 
         private void GameSelection_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_gamesList == null)
-            {
-                LoadGamesListFromDisk();
-            }
+            // Force reload from disk every time the page loads to stay perfectly in sync with RangerTools changes
+            LoadGamesListFromDisk();
+            
             foreach (var game in GamesList)
                 App.Db.EnsureGame(game.Id, game.Title);
+            // Only display games that are marked as active/visible for kiosk visitors
+            var activeGames = GamesList.Where(g => g.IsActive).ToList();
 
             GameListBox.ItemsSource = null;
-            GameListBox.ItemsSource = GamesList;
+            GameListBox.ItemsSource = activeGames;
 
-            if (GamesList.Count > 0 && GameListBox.SelectedItem == null)
+            if (activeGames.Count > 0 && GameListBox.SelectedItem == null)
             {
                 GameListBox.SelectedIndex = 0;
             }
@@ -92,6 +100,10 @@ namespace Capstone_UI
             }
         }
 
+        /// <summary>
+        /// Updates the displayed thumbnail. Safely falls back to the prebundled DefaultGameMenu.png
+        /// if the file is missing on disk or invalid.
+        /// </summary>
         private void UpdateThumbnailImage(Game game)
         {
             try
@@ -102,26 +114,68 @@ namespace Capstone_UI
                 {
                     imageToLoad = game.ImageList[_currentImageIndex];
                 }
-                string cleanPath = imageToLoad.TrimStart('/');
 
-                Uri resourceURI = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
                 BitmapImage bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                bitmap.UriSource = resourceURI;
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
+
+                if (!string.IsNullOrEmpty(imageToLoad) && imageToLoad.StartsWith("/Images/", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Built-in pack URI image reference
+                    string cleanPath = imageToLoad.TrimStart('/');
+                    bitmap.UriSource = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute);
+                }
+                else if (!string.IsNullOrEmpty(imageToLoad))
+                {
+                    // Local physical file path on disk
+                    string cleanPath = imageToLoad.TrimStart('/', '\\');
+                    string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, cleanPath);
+
+                    if (File.Exists(fullPath))
+                    {
+                        bitmap.UriSource = new Uri(fullPath, UriKind.Absolute);
+                    }
+                    else
+                    {
+                        // Fallback: Physical file was deleted or missing
+                        bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute);
+                    }
+                }
+                else
+                {
+                    // Fallback: Path string was null or empty
+                    bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute);
+                }
+
                 bitmap.EndInit();
                 ImgThumbnail.Source = bitmap;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to load image: {ex.Message}");
-                ImgThumbnail.Source = null;
+                Debug.WriteLine($"Failed to load thumbnail: {ex.Message}");
+                // Hard catch-all safety net: Load default image directly
+                try
+                {
+                    ImgThumbnail.Source = new BitmapImage(new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute));
+                }
+                catch
+                {
+                    ImgThumbnail.Source = null;
+                }
             }
         }
 
         private void logoExit(object sender, RoutedEventArgs e)
         {
-            AdminAuth.RequestAppExit();
+            try
+            {
+                KeyboardHelper.OpenTouchKeyboard();
+                AdminAuth.RequestAppExit();
+            }
+            finally
+            {
+                KeyboardHelper.CloseTouchKeyboard();
+            }
         }
 
         private void gameSelectBackButton_Click(object sender, RoutedEventArgs e)
@@ -214,7 +268,7 @@ namespace Capstone_UI
             return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "installedGames.json");
         }
 
-        private static void LoadGamesListFromDisk()
+        public static void LoadGamesListFromDisk()
         {
             string filePath = GetJsonFilePath();
 
@@ -224,6 +278,15 @@ namespace Capstone_UI
                 {
                     string json = File.ReadAllText(filePath);
                     _gamesList = System.Text.Json.JsonSerializer.Deserialize<List<Game>>(json);
+
+                    if (_gamesList != null && !json.Contains("IsActive", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var g in _gamesList)
+                        {
+                            g.IsActive = true;
+                        }
+                        SaveGamesList();
+                    }
                 }
                 catch
                 {
@@ -243,7 +306,8 @@ namespace Capstone_UI
                         ImageList = new List<string> {"/Images/I Spy Water Safety Menu.png","/Images/I Spy Water Safety Character Select.png","/Images/I Spy Water Safety Gameplay.png"},
                         Category = "Water Safety",
                         Description = "Water Safety Game (Will display later)",
-                        ExecutablePath = @"Games\Ashley KSU Games\I Spy Water Safety\Team 1\waterfinalbuild\waterfinalbuild\Capstone1.0.exe"
+                        ExecutablePath = @"Games\Ashley KSU Games\I Spy Water Safety\Team 1\waterfinalbuild\waterfinalbuild\Capstone1.0.exe",
+                        IsActive = true
                     },
                     new Game
                     {
@@ -253,7 +317,8 @@ namespace Capstone_UI
                         ImageList = new List<string> {"/Images/Water Management Menu.png","/Images/Water Management Gameplay.png","/Images/Water Management Gameplay 2.png","/Images/Water Management Gameplay 3.png" },
                         Category = "Water Resource",
                         Description = "Water Resource Game (Will display later).",
-                        ExecutablePath = @"Games\Ashley KSU Games\Water Resource Game\New Build\Builds\Windows\x64\Water Management - A Flowing Puzzle.exe"
+                        ExecutablePath = @"Games\Ashley KSU Games\Water Resource Game\New Build\Builds\Windows\x64\Water Management - A Flowing Puzzle.exe",
+                        IsActive = true
                     },
                     new Game
                     {
@@ -263,7 +328,8 @@ namespace Capstone_UI
                         ImageList = new List<string> {"/Images/A Boating Game Menu.png","/Images/A Boating Game Character Select.png","/Images/A Boating Game Gameplay.png","/Images/A Boating Game GamePlay 2.png","/Images/A Boating Game Quiz.png"},
                         Category = "Boat Safety",
                         Description = "Carters Lake Boating Safety game teaches players about safe boating practices on Carters Lake.",
-                        ExecutablePath = @"Games\Ashley KSU Games\Carters Lake Boating Safety game folder Hard Copie\Windows\A Boating Game.exe"
+                        ExecutablePath = @"Games\Ashley KSU Games\Carters Lake Boating Safety game folder Hard Copie\Windows\A Boating Game.exe",
+                        IsActive = true
                     },
                     new Game
                     {
@@ -273,7 +339,8 @@ namespace Capstone_UI
                         ImageList = new List<string> {"/Images/Drawing The Night Sky Menu.png","/Images/Drawing The Night Sky Gameplay 1.png","/Images/Drawing The Night Sky Gameplay 2.png","/Images/Drawing The Night Sky gameplay 3.png" },
                         Category = "Astrology",
                         Description = "Drawing The Night Sky game helps players learn about constellations and celestial objects.",
-                        ExecutablePath = @"Games\Ashley KSU Games\DrawingTheNightSky\DrawingTheNightSky.exe"
+                        ExecutablePath = @"Games\Ashley KSU Games\DrawingTheNightSky\DrawingTheNightSky.exe",
+                        IsActive = true
                     }
                 };
 
@@ -293,7 +360,7 @@ namespace Capstone_UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to save games: {ex.Message}");
+                Debug.WriteLine($"Failed to save games: {ex.Message}");
             }
         }
 
@@ -304,6 +371,34 @@ namespace Capstone_UI
                 var gameToRemove = _gamesList.FirstOrDefault(g => g.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
                 if (gameToRemove != null)
                 {
+                    if (!string.IsNullOrEmpty(gameToRemove.ExecutablePath))
+                    {
+                        try
+                        {
+                            string fullPath = Path.IsPathRooted(gameToRemove.ExecutablePath)
+                                ? gameToRemove.ExecutablePath
+                                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, gameToRemove.ExecutablePath);
+
+                            string gameDirectory = Path.GetDirectoryName(fullPath);
+
+                            if (!string.IsNullOrEmpty(gameDirectory) &&
+                                gameDirectory.Contains("Games", StringComparison.OrdinalIgnoreCase) &&
+                                Directory.Exists(gameDirectory))
+                            {
+                                foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories))
+                                {
+                                    File.SetAttributes(file, FileAttributes.Normal);
+                                }
+
+                                Directory.Delete(gameDirectory, recursive: true);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Could not delete physical game directory: {ex.Message}");
+                        }
+                    }
+
                     _gamesList.Remove(gameToRemove);
                     SaveGamesList();
                 }

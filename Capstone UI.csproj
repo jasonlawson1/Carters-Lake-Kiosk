@@ -17,6 +17,7 @@
     <None Remove="Images\A Boating Game Gameplay.png" />
     <None Remove="Images\A Boating Game Menu.png" />
     <None Remove="Images\A Boating Game Quiz.png" />
+    <None Remove="Images\DefaultGameMenu.png" />
     <None Remove="Images\donkeykong.jpg" />
     <None Remove="Images\Drawing The Night Sky Gameplay 1.png" />
     <None Remove="Images\Drawing The Night Sky Gameplay 2.png" />
@@ -56,7 +57,7 @@
     <Resource Include="Images\Carter%27s Lake.jpg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\donkeykong.jpg">
+    <Resource Include="Images\DefaultGameMenu.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\Drawing The Night Sky Gameplay 1.png">
@@ -78,15 +79,6 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\I Spy Water Safety Menu.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\megaman.jpg">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\re2.jpg">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\supermetroid.jpg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\Water Management Gameplay 2.png">

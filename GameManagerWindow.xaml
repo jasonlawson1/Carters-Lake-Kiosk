@@ -1,0 +1,62 @@
+﻿<Window x:Class="Capstone_UI.GameManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage &amp; Edit Games" Height="720" Width="850" 
+        WindowStartupLocation="Manual" ResizeMode="NoResize">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Daily Game Lineup, Visibility &amp; Details" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <!-- List/DataGrid of all registered games -->
+        <DataGrid x:Name="dgGames" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single" SelectionChanged="dgGames_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Visible" Binding="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                <DataGridTextColumn Header="Game Title" Binding="{Binding Title}" Width="160" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Separator Grid.Row="2" Margin="0,10"/>
+
+        <!-- Edit Form Section wrapped in a ScrollViewer -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,0,10">
+                <TextBlock Text="Edit Selected Game" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Title:" FontWeight="SemiBold"/>
+                        <TextBox x:Name="TxtEditTitle" Height="32" FontSize="14" Padding="4"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Category:" FontWeight="SemiBold"/>
+                        <TextBox x:Name="TxtEditCategory" Height="32" FontSize="14" Padding="4"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="Description:" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                <TextBox x:Name="TxtEditDescription" Height="55" AcceptsReturn="True" TextWrapping="Wrap" FontSize="14" Padding="4" Margin="0,0,0,15"/>
+
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Toggle Keyboard" Width="140" Height="38" Margin="0,0,10,0" Background="#FF673AB7" Foreground="White" FontWeight="Bold" Click="ToggleKeyboard_Click"/>
+                    <Button x:Name="BtnReplaceThumbnails" Content="Replace Thumbnails (4)" Width="180" Height="38" Margin="0,0,10,0" Click="BtnReplaceThumbnails_Click"/>
+                    <Button Content="Close &amp; Save" Width="140" Height="38" Click="CloseButton_Click" Background="#FF4CAF50" Foreground="White" FontWeight="Bold"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
