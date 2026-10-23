@@ -297,11 +297,11 @@ namespace Capstone_UI
                     GameSelection.SaveGamesList();
                     GameListView.Items.Refresh();
 
-                    MessageBox.Show("Game metadata successfully saved!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Game information has been successfully edited!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Please select a game to save changes.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Please select a game to edit.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }

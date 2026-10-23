@@ -116,7 +116,7 @@
                 <StackPanel x:Name="PanelManageGames" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
 
                     <!-- Header -->
-                    <TextBlock Text="Edit Game Metadata &amp; Visibility" 
+                    <TextBlock Text="Edit Game Information &amp; Visibility" 
                                FontSize="20" 
                                FontWeight="Black" 
                                Foreground="{StaticResource ForestGreen}" 
