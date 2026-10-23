@@ -27,19 +27,19 @@ namespace Capstone_UI
             );
         }
 
-        private void OnTextBoxGotFocus(object sender, RoutedEventArgs e)
+        private void OnTextBoxGotFocus(object sender, RoutedEventArgs e) // Event handler to bring the focused TextBox into view
         {
-            if (e.OriginalSource is TextBox textBox)
+            if (e.OriginalSource is TextBox textBox) // Check if the original source of the event is a TextBox
             {
-                DependencyObject parent = VisualTreeHelper.GetParent(textBox);
-                while (parent != null && !(parent is ScrollViewer))
+                DependencyObject parent = VisualTreeHelper.GetParent(textBox); // Traverse up the visual tree to find the nearest ScrollViewer
+                while (parent != null && !(parent is ScrollViewer)) // Continue traversing until a ScrollViewer is found or the root is reached
                 {
-                    parent = VisualTreeHelper.GetParent(parent);
+                    parent = VisualTreeHelper.GetParent(parent); // Move up the visual tree
                 }
 
-                if (parent is ScrollViewer scrollViewer)
+                if (parent is ScrollViewer scrollViewer) // If a ScrollViewer is found, bring the TextBox into view
                 {
-                    textBox.BringIntoView();
+                    textBox.BringIntoView(); // This will scroll the ScrollViewer to make the TextBox visible
                 }
             }
         }

@@ -15,58 +15,39 @@ using System.Windows.Shapes;
 
 namespace Capstone_UI
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml. Acts as the main shell and container 
-    /// for kiosk navigation, frame management, and administrative entry points.
-    /// </summary>
     public partial class MainWindow : Window
     {
-        // ==========================================
-        // Constructor & Lifecycle
-        // ==========================================
-
         public MainWindow()
         {
-            // Connects the XAML front-end layout to the code-behind. 
-            // CRITICAL: Must stay at the top of the constructor and never be deleted!
-            InitializeComponent();
+            InitializeComponent(); //Must remain on top. Parses the XAML UI layout and creates visual control.
         }
 
 
-        // ==========================================
-        // Navigation Event Handlers
-        // ==========================================
-
-        /// <summary>
-        /// Handles the play button click, navigating the user to the GameSelection page library.
-        /// </summary>
+        // The "play" button on the main page. When selected moves to GameSelection
         private void Play_Button_Click(object sender, RoutedEventArgs e)
         {
             MainFrame.Navigate(new GameSelection());
         }
 
-        /// <summary>
-        /// Automatically updates the adaptive footer action button (Switching between Exit Kiosk and Back)
-        /// and hides/shows the Staff Tools button depending on the current page.
-        /// </summary>
+        // The UI adjustment for each page.
         private void MainFrame_Navigated(object sender, NavigationEventArgs e)
         {
+            // Checks that redBrush is using ExitRed color in MainWindow. If color is null, it changes the color to another shade of red
             SolidColorBrush redBrush = (TryFindResource("ExitRed") as SolidColorBrush)
                 ?? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A6192E"));
 
-            if (MainFrame.CanGoBack)
+            if (MainFrame.CanGoBack) // If user can go back to previous page, footer changes button to "Back" function with redBrush
             {
                 FooterActionButton.Content = "⬅️ Back";
                 FooterActionButton.Background = redBrush;
             }
-            else
+            else // If user cannot go back, footer shows "Exit Kiosk" function with redBrush
             {
                 FooterActionButton.Content = "🛑 Exit Kiosk";
                 FooterActionButton.Background = redBrush;
             }
 
-            // Hide the Staff Tools button when viewing Ranger Tools, show it everywhere else
-            if (e.Content is RangerTools)
+            if (e.Content is RangerTools) //If user is in RangerTools page, hide the RangerButton. Otherwise, show it.
             {
                 RangerButton.Visibility = Visibility.Collapsed;
             }
@@ -76,10 +57,8 @@ namespace Capstone_UI
             }
         }
 
-        /// <summary>
-        /// Handles the adaptive footer action button click: goes back if on a subpage, 
-        /// or triggers the exit sequence if on the main menu.
-        /// </summary>
+
+        // Footer button function. If user can go back, it goes back to previous page. If not, it exits the application.
         private void FooterActionButton_Click(object sender, RoutedEventArgs e)
         {
             if (MainFrame.CanGoBack)
@@ -92,23 +71,13 @@ namespace Capstone_UI
             }
         }
 
-        /// <summary>
-        /// Resets or returns the main view frame back to the primary menu view.
-        /// </summary>
+        // Main menu button function. Navigates back to the main menu.
         private void MainMenu_Button_Click(object sender, RoutedEventArgs e)
         {
             MainFrame.Navigate(new MainWindow());
         }
 
-
-        // ==========================================
-        // Administrative & Exit Actions
-        // ==========================================
-
-        /// <summary>
-        /// Triggers the secure application exit sequence from the top menu bar button 
-        /// with touch keyboard support and admin verification.
-        /// </summary>
+        // Exit button function. Opens the keyboard, Requests password to exit, and closes the keyboard
         private void menuExitButton(object sender, RoutedEventArgs e)
         {
             try
@@ -122,10 +91,7 @@ namespace Capstone_UI
             }
         }
 
-        /// <summary>
-        /// Triggers the secure application exit sequence from the kiosk logo button 
-        /// with touch keyboard support and admin verification across all screens.
-        /// </summary>
+        // Exit button function. Opens the keyboard, Requests password to exit, and closes the keyboard
         private void logoExit(object sender, RoutedEventArgs e)
         {
             try
@@ -139,10 +105,7 @@ namespace Capstone_UI
             }
         }
 
-        /// <summary>
-        /// Prompts for administrative password verification before allowing entry 
-        /// into the protected RangerTools management portal.
-        /// </summary>
+        // When Ranger Tools is selected, opens keyboard, requests password, and closes keyboard. If password is correct, navigates to the ranger tools. If password is incorrect, closes window and returns to main menu.
         private void Ranger_Button_Click(object sender, RoutedEventArgs e)
         {
             bool isAuthenticated = false;

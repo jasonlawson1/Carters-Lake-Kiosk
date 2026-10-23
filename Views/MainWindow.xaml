@@ -146,13 +146,13 @@
                                     <!-- Welcome Header Text inside Bubbly Box -->
                                     <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,10,0,20">
                                         <TextBlock Text="WELCOME EXPLORER!" FontSize="42" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Explore, learn, and discover water safety &amp; nature games at Carters Lake" 
+                                        <TextBlock Text="Learn about the wonders of nature with our educational games!" 
                                                    FontSize="18" FontWeight="SemiBold" Foreground="#4A584D" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                                     </StackPanel>
 
                                     <!-- ANIMATED PULSING PROMPT TEXT -->
                                     <TextBlock Grid.Row="1" 
-                                               Text="👉 TOUCH PLAY TO BEGIN 👈" 
+                                               Text="👉 SELECT START TO BEGIN 👈" 
                                                FontSize="16" 
                                                FontWeight="ExtraBold" 
                                                Foreground="{StaticResource AccentGold}" 
@@ -165,8 +165,9 @@
                                         </TextBlock.Triggers>
                                     </TextBlock>
 
-                                    <!-- MASSIVE PLAY HERO BUTTON -->
-                                    <Button Grid.Row="2" Click="Play_Button_Click" 
+                                    <!-- MASSIVE PLAY BUTTON -->
+                                    <Button x:Name="PlayButton" Grid.Row="2" Click="Play_Button_Click" 
+                                            AutomationProperties.AutomationId="PlayButton"
                                             Style="{StaticResource HeroPlayButtonStyle}"
                                             Background="{StaticResource ForestGreen}" 
                                             HorizontalAlignment="Center" VerticalAlignment="Top"
@@ -174,8 +175,8 @@
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="🎮" FontSize="52" VerticalAlignment="Center" Margin="0,0,20,0"/>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="PLAY GAMES" FontSize="36" FontWeight="Black" Foreground="White"/>
-                                                <TextBlock Text="Tap here to launch the interactive game center" FontSize="15" Foreground="#D0E8D6" Margin="0,4,0,0"/>
+                                                <TextBlock Text="Start" FontSize="36" FontWeight="Black" Foreground="White"/>
+                                                <TextBlock Text="Click here to play games!" FontSize="15" Foreground="#D0E8D6" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </Button>

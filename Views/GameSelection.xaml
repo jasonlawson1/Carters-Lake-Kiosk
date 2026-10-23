@@ -1,5 +1,4 @@
-﻿<!--All accompanying backend functions for buttons, game-launching, and game selection are found in GameSelection.xaml.cs-->
-<Page x:Class="Capstone_UI.GameSelection"
+﻿<Page x:Class="Capstone_UI.GameSelection"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,94 +6,186 @@
       xmlns:local="clr-namespace:Capstone_UI"
       mc:Ignorable="d" 
       d:DesignHeight="1080" d:DesignWidth="1920"
-      Title="GameSelection" Background="White">
-
+      Title="GameSelection" Background="Transparent">
 
     <Grid>
-        <!-- Game Selection Content Area including the left and right columns. -->
-        <Grid Margin="0">
-            <Grid.ColumnDefinitions>
-                <!-- Left Sidebar Navigation -->
-                <ColumnDefinition Width="380"/>
-                <!-- Right Game Detail Display -->
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <!-- Outermost Container Panel (Stretches vertically with Margin=0 to touch header & footer) -->
+        <Border Width="1620" 
+                Background="#E6F5F2EB" 
+                BorderBrush= "#C29B38" BorderThickness="1.5" 
+                CornerRadius="18" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Stretch" 
+                Margin="0">
 
-            <!--Properties for the left sidebar. Defines the layout and appearance of the game list. Ensures proper spacing and visual hierarchy.-->
-            <Border Grid.Column="0" Background="#EAEAEA" BorderBrush="#AAAAAA" BorderThickness="0,0,2,0">
-                <Grid>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Margin="0,0,0,90">
-                        <ListBox x:Name="GameListBox" 
-                         BorderThickness="0" 
-                         Background="Transparent" 
-                         Margin="10"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         SelectionChanged="GameListBox_SelectionChanged">
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="MinHeight" Value="60"/>
-                                    <Setter Property="Margin" Value="0,5"/>
-                                    <Setter Property="Padding" Value="15,10"/>
-                                    <Setter Property="FontSize" Value="22"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                    <Setter Property="Background" Value="White"/>
-                                    <Setter Property="BorderBrush" Value="#CCCCCC"/>
-                                    <Setter Property="BorderThickness" Value="1"/>
+            <Grid Margin="25">
+                <Grid.ColumnDefinitions>
+                    <!-- Left Sidebar Navigation -->
+                    <ColumnDefinition Width="350"/>
+                    <!-- Spacer -->
+                    <ColumnDefinition Width="20"/>
+                    <!-- Right Game Detail Display -->
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Sidebar Navigation Panel with Header -->
+                <Border Grid.Column="0" Background="#295636" BorderBrush="#C29B38" BorderThickness="1" CornerRadius="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <!-- Row 0: Sidebar Header -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Row 1: Scrollable Game List -->
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- "Choose a Game" Sidebar Header Label -->
+                        <TextBlock Grid.Row="0" Text="CHOOSE A GAME" 
+                                   Foreground="#CBD5E1" FontSize="16" FontWeight="Bold" 
+                                   HorizontalAlignment="Center" Margin="0,18,0,10"/>
+
+                        <!-- Scrollable Game List -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Margin="0,0,0,10">
+                            <ListBox x:Name="GameListBox" 
+                                     BorderThickness="0" 
+                                     Background="#DC1E3F27" 
+                                     Margin="10,0,10,10"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     SelectionChanged="GameListBox_SelectionChanged">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="MinHeight" Value="55"/>
+                                        <Setter Property="Margin" Value="0,4"/>
+                                        <Setter Property="Padding" Value="14,10"/>
+                                        <Setter Property="FontSize" Value="17"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border Background="{TemplateBinding Background}" 
+                                                            BorderBrush="{TemplateBinding BorderBrush}" 
+                                                            BorderThickness="{TemplateBinding BorderThickness}" 
+                                                            CornerRadius="6" 
+                                                            Margin="{TemplateBinding Margin}">
+                                                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left" Margin="{TemplateBinding Padding}"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#0F172A"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Right Detail Display Panel (Anchor elements to Top to leave ample Leaderboard room) -->
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
+                    <Grid x:Name="DetailPanel" Margin="15,5,15,5" Width="1150" VerticalAlignment="Top">
+
+                        <!-- Two Equal Columns for Description & Leaderboard -->
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Row Order -->
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- Row 0: Title & Category -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Row 1: Wide Thumbnail -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Row 2: Play Button -->
+                            <RowDefinition Height="*"/>
+                            <!-- Row 3: Description & Leaderboard -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 1. Game Title (Top Left) -->
+                        <TextBlock x:Name="TxtTitle" Grid.Column="0" Grid.Row="0" 
+                                   FontSize="30" FontWeight="Bold" Foreground="#295636" 
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10"/>
+
+                        <!-- 2. Category & Rating (Top Right) -->
+                        <StackPanel Grid.Column="1" Grid.Row="0" 
+                                    Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,10">
+                            <TextBlock Text="★ " Foreground="#F59E0B" FontSize="22" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCategory" FontSize="20" FontWeight="SemiBold" Foreground="#295636" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- 3. Wide Thumbnail Card (Slightly trimmed height for compact stacking) -->
+                        <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
+                                CornerRadius="14" ClipToBounds="True" Margin="0,0,0,10" 
+                                HorizontalAlignment="Center" Background="#1E3F27" BorderBrush="#C29B38" BorderThickness="1.5">
+                            <Image x:Name="ImgThumbnail" Height="500" Width="1100" Stretch="Uniform"/>
+                        </Border>
+
+                        <!-- 4. Play Button with Flashing Text -->
+                        <Button Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
+        Width="350" Height="60" 
+        Background="#1E3F27" Foreground="White" 
+        HorizontalAlignment="Center" Margin="0,0,0,15" Cursor="Hand" Click="Button_Click">
+
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="30"/>
                                 </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
+                            </Button.Resources>
 
-                </Grid>
-            </Border>
+                            <!-- Custom Content with Flashing Animation -->
+                            <TextBlock x:Name="TxtPlayButton" Text="▶ PLAY GAME" FontSize="24" FontWeight="Bold" VerticalAlignment="Center">
+                                <TextBlock.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                         From="1.0" To="0.2" 
+                                         Duration="0:0:0.8"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </TextBlock.Triggers>
+                            </TextBlock>
+                        </Button>
 
-            <!--Properties for the right sidebar. Defines the layout and appearance of the game details. Ensures proper spacing and visual hierarchy.-->
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
-                <StackPanel x:Name="DetailPanel" Margin="40" HorizontalAlignment="Center" Width="900">
+                        <!-- 5. Bottom-Left: Description Card (Pushed down 5px from Play Button) -->
+                        <Border Grid.Column="0" Grid.Row="3" 
+                                Background="#E6FFFFFF" CornerRadius="12" Padding="18" 
+                                BorderBrush="#C29B38" BorderThickness="1" 
+                                Margin="0,5,12,0" VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock Text="About This Game" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="TxtDescription" TextWrapping="Wrap" FontSize="14" Foreground="#1E293B" LineHeight="20"/>
+                            </StackPanel>
+                        </Border>
 
-                    <!--Text Box for the game title-->
-                    <TextBlock x:Name="TxtTitle" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <!-- 6. Bottom-Right: Leaderboard Placeholder (Pushed down 5px from Play Button) -->
+                        <Border Grid.Column="1" Grid.Row="3" 
+                                Background="#330F172A" CornerRadius="12" Padding="20" 
+                                BorderBrush="#C29B38" BorderThickness="1.5" 
+                                Margin="12,5,0,0" VerticalAlignment="Stretch">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="🏆" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <TextBlock Text="Space for a leaderboard" Foreground="#CBD5E1" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
-                    <!--Defined area for the selected thumbnail-->
-                    <Border CornerRadius="12" ClipToBounds="True" Margin="0,0,0,25" HorizontalAlignment="Center">
-                        <Image x:Name="ImgThumbnail" Height="320" Stretch="Uniform"/>
-                    </Border>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
 
-                    <!--Star and genre placement-->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,25">
-                        <TextBlock Text="★ " Foreground="#FFC107" FontSize="26" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtCategory" FontSize="22" FontWeight="SemiBold" Foreground="#444444" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <!--Play button functionality and design-->
-                    <Button Content="▶" Width="70" Height="70" 
-                    Background="#2ECC71" Foreground="White" FontSize="28" 
-                    HorizontalAlignment="Center" Margin="0,0,0,25" Cursor="Hand" Click="Button_Click">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="35"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-
-                    <!--Defined area for game description-->
-                    <Border Background="#F9F9F9" CornerRadius="8" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-                        <TextBlock x:Name="TxtDescription" TextWrapping="Wrap" FontSize="18" Foreground="#333333" LineHeight="26"/>
-                    </Border>
-
-                </StackPanel>
-            </ScrollViewer>
-        </Grid>
-
-        <!-- Loading Overlay (Hidden by default; controls visibility from code-behind via LoadingOverlay.Visibility) -->
-        <Grid x:Name="LoadingOverlay" Background="#80000000" Visibility="Collapsed">
+        <!-- Loading Overlay -->
+        <Grid x:Name="LoadingOverlay" Background="#900F172A" Visibility="Collapsed">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <ProgressBar IsIndeterminate="True" Width="250" Height="25" Margin="0,0,0,15"/>
+                <ProgressBar IsIndeterminate="True" Width="280" Height="22" Margin="0,0,0,15"/>
                 <TextBlock Text="Loading Game..." Foreground="White" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>

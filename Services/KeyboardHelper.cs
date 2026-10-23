@@ -6,77 +6,57 @@ using System.Windows;
 
 namespace Capstone_UI
 {
-    /// <summary>
-    /// Helper utility for managing the Windows On-Screen Keyboard (OSK) lifecycle, 
-    /// programmatic repositioning via Win32 API calls, and touch-friendly input prompts.
-    /// </summary>
+
     public static class KeyboardHelper
     {
-        // ==========================================
-        // Win32 Interop Imports & Constants
-        // ==========================================
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport("user32.dll", SetLastError = true)] // Import the SetWindowPos function from user32.dll to set the position of a window
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags); // Import the FindWindow function from user32.dll to find a window by its class name and window name
+
+        [DllImport("user32.dll", SetLastError = true)] // Import the FindWindow function from user32.dll to find a window by its class name and window name
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        private const uint SWP_NOSIZE = 0x0001;
-        private const uint SWP_NOZORDER = 0x0004;
-        private const uint SWP_SHOWWINDOW = 0x0040;
+        private const uint SWP_NOSIZE = 0x0001; // Constant to indicate that the window size should not be changed
+        private const uint SWP_NOZORDER = 0x0004; // Constant to indicate that the window's Z order should not be changed
+        private const uint SWP_SHOWWINDOW = 0x0040; // Constant to indicate that the window should be shown
 
 
-        // ==========================================
-        // Keyboard Lifecycle Methods
-        // ==========================================
-
-        /// <summary>
-        /// Launches the Windows On-Screen Keyboard (osk.exe) robustly, bypassing 
-        /// 32/64-bit filesystem redirection, and repositions it along the bottom edge.
-        /// </summary>
         public static void OpenTouchKeyboard()
         {
             try
             {
-                // Prevent duplicate instances if already open
                 CloseTouchKeyboard();
 
-                // Resolve native system path to bypass WOW64 redirection on 64-bit Windows
-                string oskPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "osk.exe");
+                string oskPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "osk.exe"); // Default path for the on-screen keyboard executable
 
-                // If running as a 32-bit process on a 64-bit OS, point directly to Sysnative
-                if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess)
+                if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess) // Check if the OS is 64-bit and the process is 32-bit
                 {
-                    string sysnativePath = Path.Combine(Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System)).FullName, "Sysnative", "osk.exe");
-                    if (File.Exists(sysnativePath))
+                    string sysnativePath = Path.Combine(Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System)).FullName, "Sysnative", "osk.exe"); // Path to the Sysnative folder for 32-bit processes on 64-bit Windows
+                    if (File.Exists(sysnativePath)) // Check if the Sysnative path exists
                     {
-                        oskPath = sysnativePath;
+                        oskPath = sysnativePath; // Use the Sysnative path if it exists
                     }
                 }
 
-                // Step 1: Start the On-Screen Keyboard process
-                Process.Start(new ProcessStartInfo
+                Process.Start(new ProcessStartInfo // Start the on-screen keyboard process
                 {
-                    FileName = oskPath,
+                    FileName = oskPath, // Set the file name to the path of the on-screen keyboard executable
                     UseShellExecute = true
                 });
 
-                // Give the OSK process a brief moment to create its window handle
-                System.Threading.Thread.Sleep(150);
+                System.Threading.Thread.Sleep(150); // Wait for the keyboard to launch
 
-                // Step 2: Calculate screen dimensions and target keyboard coordinates
                 int screenWidth = (int)SystemParameters.PrimaryScreenWidth;
                 int screenHeight = (int)SystemParameters.PrimaryScreenHeight;
 
-                int keyboardHeight = 350; // Standard OSK height in pixels
-                int keyboardY = screenHeight - keyboardHeight; // Lock perfectly to the bottom
+                int keyboardHeight = 350; 
+                int keyboardY = screenHeight - keyboardHeight; 
 
-                // Step 3: Find the OSK window handle and dock it to the calculated position
                 IntPtr oskHandle = FindWindow("OSKMainClass", null);
                 if (oskHandle != IntPtr.Zero)
                 {
-                    SetWindowPos(oskHandle, IntPtr.Zero, 0, keyboardY, screenWidth, keyboardHeight, SWP_SHOWWINDOW);
+                    SetWindowPos(oskHandle, IntPtr.Zero, 0, keyboardY, screenWidth, keyboardHeight, SWP_SHOWWINDOW); // Set the position and size of the on-screen keyboard window
                 }
             }
             catch (Exception ex)
@@ -85,17 +65,15 @@ namespace Capstone_UI
             }
         }
 
-        /// <summary>
-        /// Terminates any running instances of the Windows On-Screen Keyboard process.
-        /// </summary>
-        public static void CloseTouchKeyboard()
+
+        public static void CloseTouchKeyboard() // Method to close the on-screen keyboard
         {
             try
             {
-                foreach (var process in Process.GetProcessesByName("osk"))
+                foreach (var process in Process.GetProcessesByName("osk")) // Get all processes with the name "osk" (on-screen keyboard)
                 {
-                    process.Kill();
-                    process.WaitForExit(300);
+                    process.Kill(); // Kill the process to close the on-screen keyboard
+                    process.WaitForExit(300); // Wait for the process to exit, with a timeout of 300 milliseconds
                 }
             }
             catch (Exception ex)
@@ -105,28 +83,20 @@ namespace Capstone_UI
         }
 
 
-        // ==========================================
-        // Helper Prompt Methods
-        // ==========================================
-
-        /// <summary>
-        /// Opens the touch keyboard and displays a modal input dialog box safely anchored 
-        /// at 10% from the top of the screen while the OSK stays at the bottom.
-        /// </summary>
-        public static string PromptWithKeyboard(string prompt, string title, string defaultResponse = "")
+ 
+        public static string PromptWithKeyboard(string prompt, string title, string defaultResponse = "") // Method to show an input box with the on-screen keyboard
         {
             try
             {
                 OpenTouchKeyboard();
 
-                // Brief pause to ensure the dialog doesn't steal focus before the keyboard renders
                 System.Threading.Thread.Sleep(100);
 
                 double screenWidth = SystemParameters.PrimaryScreenWidth;
                 double screenHeight = SystemParameters.PrimaryScreenHeight;
 
                 int xPos = (int)((screenWidth / 2) - 200);
-                int yPos = (int)(screenHeight * 0.1); // Anchored high up (10% from top)
+                int yPos = (int)(screenHeight * 0.1);
 
                 return Microsoft.VisualBasic.Interaction.InputBox(prompt, title, defaultResponse, xPos, yPos);
             }
