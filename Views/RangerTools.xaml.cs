@@ -467,5 +467,36 @@ namespace Capstone_UI
         {
             KeyboardHelper.OpenTouchKeyboard();
         }
+
+        private void AnalyticsButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Analytic Tools" button. Loads analytics data and displays the analytics dashboard panel.
+        {
+            App.Db.InsertTestAnalyticsData();
+            
+            PanelMenuButtons.Visibility = Visibility.Collapsed;
+            PanelAnalytics.Visibility = Visibility.Visible;
+
+            int totalSessions = App.Db.GetTotalSessions();
+            double averageDuration = App.Db.GetAverageSessionDuration();
+            int adultSessions = App.Db.GetAdultSessionCount();
+            int under18Sessions = App.Db.GetUnder18SessionCount();
+
+            int averageSeconds = (int)Math.Round(averageDuration);
+            int averageMinutes = averageSeconds / 60;
+            int remainingSeconds = averageSeconds % 60;
+
+            TxtTotalSessions.Text = totalSessions.ToString();
+            TxtAverageDuration.Text = $"{averageMinutes}m {remainingSeconds}s";
+            TxtAdultSessions.Text = adultSessions.ToString();
+            TxtUnder18Sessions.Text = under18Sessions.ToString();
+
+            AnalyticsGameList.ItemsSource = App.Db.GetGameUsage();
+            RecentSessionsList.ItemsSource = App.Db.GetRecentSessions();
+        }
+
+        private void CloseAnalyticsPanel_Click(object sender, RoutedEventArgs e) // Event handler for the analytics back button. Returns the Ranger to the main administration menu.
+        {
+            PanelAnalytics.Visibility = Visibility.Collapsed;
+            PanelMenuButtons.Visibility = Visibility.Visible;
+        }
     }
 }
