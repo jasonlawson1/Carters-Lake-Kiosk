@@ -109,7 +109,7 @@
                     <Button Content="➕ Add Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="AddGameButton_Click"/>
                     <Button Content="📝 Manage Game List" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="ManageGameListButton_Click"/>
                     <Button Content="🗑️ Remove Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="RemoveGameButton_Click"/>
-                    <Button Content="📊 Analytic Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80"/>
+                    <Button Content="📊 Analytic Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Click="AnalyticsButton_Click"/>
                 </StackPanel>
 
                 <!-- 2. GAME MANAGEMENT & EDIT PANEL -->
@@ -197,6 +197,41 @@
                             <Button x:Name="BtnSaveChanges" Content="💾 Save &amp; Close" Style="{StaticResource EditActionButtonStyle}" Background="#2C5E3B" Height="42" Click="BtnSaveChanges_Click"/>
                         </StackPanel>
                     </Grid>
+                </StackPanel>
+
+                                <!-- 3. ANALYTICS DASHBOARD PANEL -->
+                <StackPanel x:Name="PanelAnalytics" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
+                    <TextBlock Text="Ranger Analytics Dashboard" FontSize="24" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Left" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <StackPanel Width="205">
+                            <TextBlock Text="Total Sessions" FontSize="14" FontWeight="Bold" Foreground="#4A584D"/>
+                            <TextBlock x:Name="TxtTotalSessions" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ForestGreen}"/>
+                        </StackPanel>
+
+                        <StackPanel Width="205">
+                            <TextBlock Text="Average Duration" FontSize="14" FontWeight="Bold" Foreground="#4A584D"/>
+                            <TextBlock x:Name="TxtAverageDuration" Text="0m 0s" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ForestGreen}"/>
+                        </StackPanel>
+
+                        <StackPanel Width="205">
+                            <TextBlock Text="Adult Sessions" FontSize="14" FontWeight="Bold" Foreground="#4A584D"/>
+                            <TextBlock x:Name="TxtAdultSessions" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ForestGreen}"/>
+                        </StackPanel>
+
+                        <StackPanel Width="205">
+                            <TextBlock Text="Under 18 Sessions" FontSize="14" FontWeight="Bold" Foreground="#4A584D"/>
+                            <TextBlock x:Name="TxtUnder18Sessions" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource ForestGreen}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="Game Usage" FontSize="16" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,5"/>
+                    <ListBox x:Name="AnalyticsGameList" Height="145" FontSize="15" BorderBrush="{StaticResource AccentGold}" BorderThickness="1.5" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Recent Sessions (Name | Age Group | Game | Duration)" FontSize="16" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,5"/>
+                    <ListBox x:Name="RecentSessionsList" Height="175" FontSize="14" BorderBrush="{StaticResource AccentGold}" BorderThickness="1.5"/>
+
+                    <Button Content="⬅️ Back" Style="{StaticResource EditActionButtonStyle}" Background="{StaticResource ExitRed}" HorizontalAlignment="Left" Click="CloseAnalyticsPanel_Click" Width="110" Height="42" Margin="0,15,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
