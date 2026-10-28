@@ -470,8 +470,6 @@ namespace Capstone_UI
 
         private void AnalyticsButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Analytic Tools" button. Loads analytics data and displays the analytics dashboard panel.
         {
-            App.Db.InsertTestAnalyticsData();
-            
             PanelMenuButtons.Visibility = Visibility.Collapsed;
             PanelAnalytics.Visibility = Visibility.Visible;
 

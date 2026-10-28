@@ -241,16 +241,4 @@ public class DatabaseService
 
         return recentSessions;
     }
-
-    public void InsertTestAnalyticsData()
-    {
-        int gameId = 1;
-        EnsureGame(gameId, "I Spy Water Safety");
-
-        int adultUserId = InsertUser("Test Adult", true);
-        InsertGameData(adultUserId, gameId, 0, 125);
-
-        int under18UserId = InsertUser("Test Student", false);
-        InsertGameData(under18UserId, gameId, 0, 80);
-    }
 }
