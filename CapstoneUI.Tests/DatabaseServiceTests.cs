@@ -139,6 +139,27 @@ public sealed class DatabaseServiceTests : IDisposable
         Assert.AreEqual("Added Game", (string?)QueryScalar($"SELECT name FROM games WHERE id = {id}"));
     }
 
+    // ---------- Old placeholder scores ----------
+
+    [TestMethod]
+    public void Startup_ClearsOldPlaceholderZeroScores_Once()
+    {
+        _db.EnsureGame(1, "Test Game");
+        int userId = _db.InsertUser("Alice", true);
+
+        // Simulate a database from before scores existed: placeholder 0 and user_version not set yet
+        QueryScalar($"INSERT INTO game_data (user_id, game_id, score, time_played, played_at) VALUES ({userId}, 1, 0, 10, 'x')");
+        QueryScalar("PRAGMA user_version = 0");
+
+        new DatabaseService(_dbPath); // App starts: placeholder 0 becomes "no score"
+        Assert.AreEqual("Good Job!", _db.GetLeaderboard(1)[0].DisplayScore);
+
+        _db.InsertGameData(userId, 1, 0, 10); // A real score of 0 saved after the cleanup
+        new DatabaseService(_dbPath); // Next startup must not clear it
+
+        Assert.AreEqual(1L, (long)QueryScalar("SELECT COUNT(*) FROM game_data WHERE score = 0")!);
+    }
+
     // ---------- GetLeaderboard ----------
 
     [TestMethod]

@@ -55,6 +55,18 @@ public class DatabaseService
                               );
                           """;
         cmd.ExecuteNonQuery();
+
+        // One-time cleanup: before games could report scores, every play was saved with a placeholder score of 0.
+        // Clear those so they show "Good Job!" instead of 0. user_version marks that this has already run.
+        cmd.CommandText = "PRAGMA user_version;";
+        if (Convert.ToInt32(cmd.ExecuteScalar()) < 1)
+        {
+            cmd.CommandText = """
+                              UPDATE game_data SET score = NULL WHERE score = 0;
+                              PRAGMA user_version = 1;
+                              """;
+            cmd.ExecuteNonQuery();
+        }
     }
 
     public int InsertUser(string name, bool isAdult)
