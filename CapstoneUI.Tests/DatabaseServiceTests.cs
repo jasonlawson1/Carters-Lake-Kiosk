@@ -138,4 +138,61 @@ public sealed class DatabaseServiceTests : IDisposable
 
         Assert.AreEqual("Added Game", (string?)QueryScalar($"SELECT name FROM games WHERE id = {id}"));
     }
+
+    // ---------- GetLeaderboard ----------
+
+    [TestMethod]
+    public void GetLeaderboard_NoPlays_ReturnsEmpty()
+    {
+        _db.EnsureGame(1, "Test Game");
+
+        Assert.AreEqual(0, _db.GetLeaderboard(1).Count);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_OnlyIncludesSelectedGame()
+    {
+        _db.EnsureGame(1, "Game 1");
+        _db.EnsureGame(2, "Game 2");
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, 0, 10);
+        _db.InsertGameData(_db.InsertUser("Bob", false), 2, 0, 10);
+
+        var leaderboard = _db.GetLeaderboard(1);
+
+        Assert.AreEqual(1, leaderboard.Count);
+        Assert.AreEqual("Alice", leaderboard[0].Username);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_RespectsLimitAndNumbersRanks()
+    {
+        _db.EnsureGame(1, "Test Game");
+        for (int i = 0; i < 7; i++)
+            _db.InsertGameData(_db.InsertUser($"Player {i}", true), 1, 0, 10);
+
+        var leaderboard = _db.GetLeaderboard(1, 5);
+
+        Assert.AreEqual(5, leaderboard.Count);
+        Assert.AreEqual(1, leaderboard[0].Rank);
+        Assert.AreEqual(5, leaderboard[4].Rank);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_HighestScoreFirst()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Low", true), 1, 10, 10);
+        _db.InsertGameData(_db.InsertUser("High", true), 1, 90, 10);
+
+        Assert.AreEqual("High", _db.GetLeaderboard(1)[0].Username);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_DisplaysGoodJobInsteadOfScore()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, 0, 10);
+
+        Assert.AreEqual("Good Job!", _db.GetLeaderboard(1)[0].DisplayScore);
+    }
 }

@@ -83,6 +83,7 @@ namespace Capstone_UI
                 _currentImageIndex = 0;
 
                 UpdateThumbnailImage(selectedGame);
+                LoadLeaderboard(selectedGame);
 
                 if (selectedGame.ImageList != null && selectedGame.ImageList.Count > 1) // If the selected game has multiple images, start the image cycle timer
                 {
@@ -154,6 +155,22 @@ namespace Capstone_UI
                 {
                     ImgThumbnail.Source = null; // If even the fallback image fails to load, set the source to null
                 }
+            }
+        }
+
+        private void LoadLeaderboard(Game game) // Method to fill the leaderboard panel with the selected game's top players
+        {
+            try
+            {
+                var entries = App.Db.GetLeaderboard(game.Id); // Get the top players for this game from the database
+                LeaderboardList.ItemsSource = entries;
+                TxtLeaderboardEmpty.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed; // Show the empty message if nobody has played yet
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load leaderboard: {ex.Message}");
+                LeaderboardList.ItemsSource = null;
+                TxtLeaderboardEmpty.Visibility = Visibility.Visible;
             }
         }
 
@@ -242,6 +259,8 @@ namespace Capstone_UI
                     int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult); // Insert the user information into the database and get the user ID
                     int score = 0;
                     App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds); // Insert the game data into the database, including the user ID, game ID, score, and elapsed time
+
+                    LoadLeaderboard(selectedGame); // Refresh the leaderboard so the new player shows up right away
                 }
                 catch (Exception ex)
                 {

@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Media;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
+using Capstone_UI.Models;
 
 namespace Capstone_UI.Services;
 
@@ -240,5 +241,40 @@ public class DatabaseService
         }
 
         return recentSessions;
+    }
+
+    public List<LeaderboardEntry> GetLeaderboard(int gameId, int limit = 5)
+    {
+        List<LeaderboardEntry> leaderboard = new List<LeaderboardEntry>();
+
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+
+        // Highest score first; ties (e.g. every score is 0 for now) fall back to most recent play
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+                          SELECT u.username, COALESCE(gd.score, 0)
+                          FROM game_data gd
+                          JOIN users u ON gd.user_id = u.id
+                          WHERE gd.game_id = $game_id
+                          ORDER BY gd.score DESC, gd.played_at DESC
+                          LIMIT $limit;
+                          """;
+        cmd.Parameters.AddWithValue("$game_id", gameId);
+        cmd.Parameters.AddWithValue("$limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            leaderboard.Add(new LeaderboardEntry
+            {
+                Rank = leaderboard.Count + 1,
+                Username = reader.GetString(0),
+                Score = reader.GetInt32(1)
+            });
+        }
+
+        return leaderboard;
     }
 }

@@ -166,14 +166,40 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 6. Bottom-Right: Leaderboard Placeholder (Pushed down 5px from Play Button) -->
-                        <Border Grid.Column="1" Grid.Row="3" 
-                                Background="#330F172A" CornerRadius="12" Padding="20" 
-                                BorderBrush="#C29B38" BorderThickness="1.5" 
+                        <!-- 6. Bottom-Right: Leaderboard (Pushed down 5px from Play Button) -->
+                        <Border Grid.Column="1" Grid.Row="3"
+                                Background="#330F172A" CornerRadius="12" Padding="20"
+                                BorderBrush="#C29B38" BorderThickness="1.5"
                                 Margin="12,5,0,0" VerticalAlignment="Stretch">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="🏆" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                <TextBlock Text="Space for a leaderboard" Foreground="#CBD5E1" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <StackPanel>
+                                <!-- Header -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                    <TextBlock Text="🏆 " FontSize="22" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Leaderboard" Foreground="#CBD5E1" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Rows: Rank | Player Name | Score (filled from GameSelection.xaml.cs) -->
+                                <ItemsControl x:Name="LeaderboardList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat={}{0}.}" Foreground="#C29B38" FontSize="16" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Username}" Foreground="White" FontSize="16" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding DisplayScore}" Foreground="#CBD5E1" FontSize="16" FontWeight="SemiBold" Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Shown when nobody has played the selected game yet -->
+                                <TextBlock x:Name="TxtLeaderboardEmpty" Text="No players yet. Be the first!"
+                                           Foreground="#CBD5E1" FontSize="16" HorizontalAlignment="Center"
+                                           Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
 
