@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Capstone_UI.Views;
+using Capstone_UI.Services;
 
 namespace Capstone_UI
 {
@@ -236,6 +237,7 @@ namespace Capstone_UI
                         UseShellExecute = true
                     };
 
+                    var launchedAt = DateTimeOffset.UtcNow; // Remember when the game started so only a score from this play is used
                     using var process = Process.Start(startInfo);
                     if (process == null)
                     {
@@ -257,7 +259,7 @@ namespace Capstone_UI
                         return;
 
                     int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult); // Insert the user information into the database and get the user ID
-                    int score = 0;
+                    int? score = LiveScoreReader.TryReadScore(launchedAt); // Score reported by the game, or null if it doesn't report one
                     App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds); // Insert the game data into the database, including the user ID, game ID, score, and elapsed time
 
                     LoadLeaderboard(selectedGame); // Refresh the leaderboard so the new player shows up right away

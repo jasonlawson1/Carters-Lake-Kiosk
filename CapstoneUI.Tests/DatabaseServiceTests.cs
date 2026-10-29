@@ -188,11 +188,30 @@ public sealed class DatabaseServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void GetLeaderboard_DisplaysGoodJobInsteadOfScore()
+    public void GetLeaderboard_NoScore_DisplaysGoodJob()
     {
         _db.EnsureGame(1, "Test Game");
-        _db.InsertGameData(_db.InsertUser("Alice", true), 1, 0, 10);
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, null, 10);
 
         Assert.AreEqual("Good Job!", _db.GetLeaderboard(1)[0].DisplayScore);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_WithScore_DisplaysScore()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, 1500, 10);
+
+        Assert.AreEqual(1500.ToString("N0"), _db.GetLeaderboard(1)[0].DisplayScore);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_PlaysWithoutScore_SortAfterScoredPlays()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Scored", true), 1, 5, 10);
+        _db.InsertGameData(_db.InsertUser("NoScore", true), 1, null, 10);
+
+        Assert.AreEqual("Scored", _db.GetLeaderboard(1)[0].Username);
     }
 }

@@ -75,7 +75,7 @@ public class DatabaseService
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
-    public void InsertGameData(int userId, int gameId, int score, int timePlayed)
+    public void InsertGameData(int userId, int gameId, int? score, int timePlayed)
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
@@ -87,7 +87,7 @@ public class DatabaseService
                           """;
         cmd.Parameters.AddWithValue("$user_id", userId);
         cmd.Parameters.AddWithValue("$game_id", gameId);
-        cmd.Parameters.AddWithValue("$score", score);
+        cmd.Parameters.AddWithValue("$score", (object?)score ?? DBNull.Value); // NULL when the game doesn't report a score
         cmd.Parameters.AddWithValue("$time_played", timePlayed);
         cmd.Parameters.AddWithValue("$played_at", DateTime.UtcNow.ToString("O"));
         
@@ -250,10 +250,10 @@ public class DatabaseService
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
 
-        // Highest score first; ties (e.g. every score is 0 for now) fall back to most recent play
+        // Highest score first (plays without a score sort last); ties fall back to most recent play
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-                          SELECT u.username, COALESCE(gd.score, 0)
+                          SELECT u.username, gd.score
                           FROM game_data gd
                           JOIN users u ON gd.user_id = u.id
                           WHERE gd.game_id = $game_id
@@ -271,7 +271,7 @@ public class DatabaseService
             {
                 Rank = leaderboard.Count + 1,
                 Username = reader.GetString(0),
-                Score = reader.GetInt32(1)
+                Score = reader.IsDBNull(1) ? null : reader.GetInt32(1)
             });
         }
 
