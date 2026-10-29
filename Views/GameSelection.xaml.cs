@@ -77,7 +77,7 @@ namespace Capstone_UI
             {
                 // Update the UI elements with the selected game's details
                 TxtTitle.Text = selectedGame.Title;
-                TxtCategory.Text = selectedGame.Category; 
+                TxtCategory.Text = selectedGame.Category;
                 TxtDescription.Text = selectedGame.Description;
 
                 _imageCycleTimer.Stop();
@@ -191,8 +191,7 @@ namespace Capstone_UI
             }
         }
 
-        // Logic fo rback button to return to main menu
-
+        // Logic for back button to return to main menu
         private void gameSelectBackButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.NavigationService != null) // Check if the NavigationService is available
@@ -312,56 +311,9 @@ namespace Capstone_UI
                 }
             }
 
-            if (_gamesList == null) // If the list is still null after attempting to load from disk, initialize it with default games
+            if (_gamesList == null) // If the list is still null after attempting to load from disk, initialize it as empty
             {
-                _gamesList = new List<Game> // Initialize the list of games with default values
-                {
-                    new Game
-                    {
-                        Id = 1,
-                        Title = "I Spy Water Safety",
-                        ImagePath = "/Images/I Spy Water Safety Menu.png",
-                        ImageList = new List<string> { "/Images/I Spy Water Safety Menu.png", "/Images/I Spy Water Safety Character Select.png", "/Images/I Spy Water Safety Gameplay.png" },
-                        Category = "Water Safety",
-                        Description = "Water Safety Game (Will display later)",
-                        ExecutablePath = @"Games\Ashley KSU Games\I Spy Water Safety\Team 1\waterfinalbuild\waterfinalbuild\Capstone1.0.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 2,
-                        Title = "Water Resource Game",
-                        ImagePath = "/Images/Water Management Menu.png",
-                        ImageList = new List<string> { "/Images/Water Management Menu.png", "/Images/Water Management Gameplay.png", "/Images/Water Management Gameplay 2.png", "/Images/Water Management Gameplay 3.png" },
-                        Category = "Water Resource",
-                        Description = "Water Resource Game (Will display later).",
-                        ExecutablePath = @"Games\Ashley KSU Games\Water Resource Game\New Build\Builds\Windows\x64\Water Management - A Flowing Puzzle.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 3,
-                        Title = "Carters Lake Boating Safety",
-                        ImagePath = "/Images/A Boating Game Menu.png",
-                        ImageList = new List<string> { "/Images/A Boating Game Menu.png", "/Images/A Boating Game Character Select.png", "/Images/A Boating Game Gameplay.png", "/Images/A Boating Game GamePlay 2.png", "/Images/A Boating Game Quiz.png" },
-                        Category = "Boat Safety",
-                        Description = "Carters Lake Boating Safety game teaches players about safe boating practices on Carters Lake.",
-                        ExecutablePath = @"Games\Ashley KSU Games\Carters Lake Boating Safety game folder Hard Copie\Windows\A Boating Game.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 4,
-                        Title = "Drawing The Night Sky",
-                        ImagePath = "/Images/Drawing The Night Sky Menu.png",
-                        ImageList = new List<string> { "/Images/Drawing The Night Sky Menu.png", "/Images/Drawing The Night Sky Gameplay 1.png", "/Images/Drawing The Night Sky Gameplay 2.png", "/Images/Drawing The Night Sky gameplay 3.png" },
-                        Category = "Astrology",
-                        Description = "Drawing The Night Sky game helps players learn about constellations and celestial objects.",
-                        ExecutablePath = @"Games\Ashley KSU Games\DrawingTheNightSky\DrawingTheNightSky.exe",
-                        IsActive = true
-                    }
-                };
-
+                _gamesList = new List<Game>(); // Start with an empty list instead of hardcoded default games
                 SaveGamesList();
             }
         }
