@@ -24,20 +24,14 @@ public static class LiveScoreReader
             if (!File.Exists(scoreFile))
                 return null;
 
-            using var doc = JsonDocument.Parse(File.ReadAllText(scoreFile));
-            JsonElement root = doc.RootElement;
-
-            // Use the game's own timestamp when it has one, otherwise when the file was last saved
+            // Use when Windows last saved the file, not the game's "updatedAt" text, which could be in the wrong time zone.
+            // Games that don't report scores never touch this file, so for them it's always older than the launch.
             DateTimeOffset writtenAt = File.GetLastWriteTimeUtc(scoreFile);
-            if (root.TryGetProperty("updatedAt", out JsonElement updatedAt) &&
-                updatedAt.ValueKind == JsonValueKind.String &&
-                DateTimeOffset.TryParse(updatedAt.GetString(), out DateTimeOffset parsed))
-            {
-                writtenAt = parsed;
-            }
-
             if (writtenAt < launchedAt)
                 return null;
+
+            using var doc = JsonDocument.Parse(File.ReadAllText(scoreFile));
+            JsonElement root = doc.RootElement;
 
             if (!root.TryGetProperty("score", out JsonElement score))
                 return null;

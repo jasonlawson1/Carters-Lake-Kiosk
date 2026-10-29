@@ -39,16 +39,27 @@ public sealed class LiveScoreReaderTests : IDisposable
     }
 
     [TestMethod]
-    public void TryReadScore_WrittenBeforeLaunch_ReturnsNull()
+    public void TryReadScore_FileSavedBeforeLaunch_ReturnsNull()
     {
-        var launchedAt = DateTimeOffset.UtcNow;
-        WriteScoreFile($$"""{ "player": "Alice", "score": 1200, "updatedAt": "{{IsoTime(launchedAt.AddMinutes(-10))}}" }""");
+        // A non-scoring game: the file is left over from an earlier play of the scoring game
+        WriteScoreFile("""{ "player": "Alice", "score": 1200 }""");
+        File.SetLastWriteTimeUtc(_scoreFile, DateTime.UtcNow.AddMinutes(-10));
 
-        Assert.IsNull(LiveScoreReader.TryReadScore(launchedAt, _scoreFile));
+        Assert.IsNull(LiveScoreReader.TryReadScore(DateTimeOffset.UtcNow, _scoreFile));
     }
 
     [TestMethod]
-    public void TryReadScore_NoUpdatedAt_UsesFileSaveTime()
+    public void TryReadScore_IgnoresUpdatedAtInWrongTimeZone()
+    {
+        // The game's own timestamp claims the future, but the file was really saved before launch
+        WriteScoreFile($$"""{ "player": "Alice", "score": 1200, "updatedAt": "{{IsoTime(DateTimeOffset.UtcNow.AddHours(5))}}" }""");
+        File.SetLastWriteTimeUtc(_scoreFile, DateTime.UtcNow.AddMinutes(-10));
+
+        Assert.IsNull(LiveScoreReader.TryReadScore(DateTimeOffset.UtcNow, _scoreFile));
+    }
+
+    [TestMethod]
+    public void TryReadScore_NoUpdatedAt_ReturnsScore()
     {
         var launchedAt = DateTimeOffset.UtcNow.AddMinutes(-5);
         WriteScoreFile("""{ "player": "Alice", "score": 300 }""");
