@@ -164,6 +164,8 @@ namespace Capstone_UI
             try
             {
                 var entries = App.Db.GetLeaderboard(game.Id); // Get the top players for this game from the database
+                foreach (var entry in entries)
+                    entry.GameHasScoreboard = game.HasScoreboard; // Lets plays without a score show "Did Not Finish" for scoreboard games
                 LeaderboardList.ItemsSource = entries;
                 TxtLeaderboardEmpty.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed; // Show the empty message if nobody has played yet
             }

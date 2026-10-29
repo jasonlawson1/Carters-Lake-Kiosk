@@ -1,4 +1,5 @@
-﻿using Capstone_UI.Services;
+﻿using Capstone_UI.Models;
+using Capstone_UI.Services;
 using Microsoft.Data.Sqlite;
 
 namespace CapstoneUI.Tests;
@@ -152,7 +153,7 @@ public sealed class DatabaseServiceTests : IDisposable
         QueryScalar("PRAGMA user_version = 0");
 
         new DatabaseService(_dbPath); // App starts: placeholder 0 becomes "no score"
-        Assert.AreEqual("Good Job!", _db.GetLeaderboard(1)[0].DisplayScore);
+        Assert.IsNull(_db.GetLeaderboard(1)[0].Score);
 
         _db.InsertGameData(userId, 1, 0, 10); // A real score of 0 saved after the cleanup
         new DatabaseService(_dbPath); // Next startup must not clear it
@@ -209,12 +210,33 @@ public sealed class DatabaseServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void GetLeaderboard_NoScore_DisplaysGoodJob()
+    public void GetLeaderboard_NoScore_DisplaysAffirmation()
     {
         _db.EnsureGame(1, "Test Game");
         _db.InsertGameData(_db.InsertUser("Alice", true), 1, null, 10);
 
-        Assert.AreEqual("Good Job!", _db.GetLeaderboard(1)[0].DisplayScore);
+        CollectionAssert.Contains(LeaderboardEntry.Affirmations, _db.GetLeaderboard(1)[0].DisplayScore);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_NoScore_SamePlayerGetsSameAffirmationEachTime()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, null, 10);
+
+        Assert.AreEqual(_db.GetLeaderboard(1)[0].DisplayScore, _db.GetLeaderboard(1)[0].DisplayScore);
+    }
+
+    [TestMethod]
+    public void GetLeaderboard_NoScoreOnScoreboardGame_DisplaysDidNotFinish()
+    {
+        _db.EnsureGame(1, "Test Game");
+        _db.InsertGameData(_db.InsertUser("Alice", true), 1, null, 10);
+
+        var entry = _db.GetLeaderboard(1)[0];
+        entry.GameHasScoreboard = true;
+
+        Assert.AreEqual("Did Not Finish :(", entry.DisplayScore);
     }
 
     [TestMethod]
