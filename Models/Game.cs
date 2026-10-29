@@ -25,6 +25,9 @@ namespace Capstone_UI.Models
         public bool IsActive { get; set; } = true;
 
 
+        public bool HasScoreboard { get; set; } // True for games that report a score, so a play without one means the player didn't finish
+
+
         public string SafeImagePath // Property to get a valid image path, falling back to a default if necessary
         {
             get

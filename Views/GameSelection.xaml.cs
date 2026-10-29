@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Capstone_UI.Views;
+using Capstone_UI.Services;
 
 namespace Capstone_UI
 {
@@ -83,6 +84,7 @@ namespace Capstone_UI
                 _currentImageIndex = 0;
 
                 UpdateThumbnailImage(selectedGame);
+                LoadLeaderboard(selectedGame);
 
                 if (selectedGame.ImageList != null && selectedGame.ImageList.Count > 1) // If the selected game has multiple images, start the image cycle timer
                 {
@@ -157,6 +159,24 @@ namespace Capstone_UI
             }
         }
 
+        private void LoadLeaderboard(Game game) // Method to fill the leaderboard panel with the selected game's top players
+        {
+            try
+            {
+                var entries = App.Db.GetLeaderboard(game.Id); // Get the top players for this game from the database
+                foreach (var entry in entries)
+                    entry.GameHasScoreboard = game.HasScoreboard; // Lets plays without a score show "Did Not Finish" for scoreboard games
+                LeaderboardList.ItemsSource = entries;
+                TxtLeaderboardEmpty.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed; // Show the empty message if nobody has played yet
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load leaderboard: {ex.Message}");
+                LeaderboardList.ItemsSource = null;
+                TxtLeaderboardEmpty.Visibility = Visibility.Visible;
+            }
+        }
+
         // Logic for exit via logo
         private void logoExit(object sender, RoutedEventArgs e)
         {
@@ -219,6 +239,7 @@ namespace Capstone_UI
                         UseShellExecute = true
                     };
 
+                    var launchedAt = DateTimeOffset.UtcNow; // Remember when the game started so only a score from this play is used
                     using var process = Process.Start(startInfo);
                     if (process == null)
                     {
@@ -240,8 +261,10 @@ namespace Capstone_UI
                         return;
 
                     int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult); // Insert the user information into the database and get the user ID
-                    int score = 0;
+                    int? score = LiveScoreReader.TryReadScore(launchedAt); // Score reported by the game, or null if it doesn't report one
                     App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds); // Insert the game data into the database, including the user ID, game ID, score, and elapsed time
+
+                    LoadLeaderboard(selectedGame); // Refresh the leaderboard so the new player shows up right away
                 }
                 catch (Exception ex)
                 {

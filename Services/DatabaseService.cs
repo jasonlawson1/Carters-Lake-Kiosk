@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Media;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
+using Capstone_UI.Models;
 
 namespace Capstone_UI.Services;
 
@@ -54,6 +55,18 @@ public class DatabaseService
                               );
                           """;
         cmd.ExecuteNonQuery();
+
+        // One-time cleanup: before games could report scores, every play was saved with a placeholder score of 0.
+        // Clear those so they show "Good Job!" instead of 0. user_version marks that this has already run.
+        cmd.CommandText = "PRAGMA user_version;";
+        if (Convert.ToInt32(cmd.ExecuteScalar()) < 1)
+        {
+            cmd.CommandText = """
+                              UPDATE game_data SET score = NULL WHERE score = 0;
+                              PRAGMA user_version = 1;
+                              """;
+            cmd.ExecuteNonQuery();
+        }
     }
 
     public int InsertUser(string name, bool isAdult)
@@ -74,7 +87,7 @@ public class DatabaseService
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
-    public void InsertGameData(int userId, int gameId, int score, int timePlayed)
+    public void InsertGameData(int userId, int gameId, int? score, int timePlayed)
     {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
@@ -86,7 +99,7 @@ public class DatabaseService
                           """;
         cmd.Parameters.AddWithValue("$user_id", userId);
         cmd.Parameters.AddWithValue("$game_id", gameId);
-        cmd.Parameters.AddWithValue("$score", score);
+        cmd.Parameters.AddWithValue("$score", (object?)score ?? DBNull.Value); // NULL when the game doesn't report a score
         cmd.Parameters.AddWithValue("$time_played", timePlayed);
         cmd.Parameters.AddWithValue("$played_at", DateTime.UtcNow.ToString("O"));
         
@@ -240,5 +253,40 @@ public class DatabaseService
         }
 
         return recentSessions;
+    }
+
+    public List<LeaderboardEntry> GetLeaderboard(int gameId, int limit = 5)
+    {
+        List<LeaderboardEntry> leaderboard = new List<LeaderboardEntry>();
+
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+
+        // Highest score first (plays without a score sort last); ties fall back to most recent play
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+                          SELECT u.username, gd.score
+                          FROM game_data gd
+                          JOIN users u ON gd.user_id = u.id
+                          WHERE gd.game_id = $game_id
+                          ORDER BY gd.score DESC, gd.played_at DESC
+                          LIMIT $limit;
+                          """;
+        cmd.Parameters.AddWithValue("$game_id", gameId);
+        cmd.Parameters.AddWithValue("$limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            leaderboard.Add(new LeaderboardEntry
+            {
+                Rank = leaderboard.Count + 1,
+                Username = reader.GetString(0),
+                Score = reader.IsDBNull(1) ? null : reader.GetInt32(1)
+            });
+        }
+
+        return leaderboard;
     }
 }

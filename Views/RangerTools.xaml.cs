@@ -138,6 +138,12 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customDescription)) customDescription = "Custom added game build.";
 
+                    // Ask if the game reports scores, so plays without a score show "Did Not Finish" instead of "Good Job!"
+                    bool hasScoreboard = MessageBox.Show(
+                        "Does this game report scores?",
+                        "Game Scoreboard",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question) == MessageBoxResult.Yes;
 
                     string safeFolderName = string.Join("_", customTitle.Split(Path.GetInvalidFileNameChars())); // Create a safe folder name by replacing invalid characters in the custom title with underscores
                     string baseAppDirectory = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar; // Get the base application directory and ensure it ends with a directory separator
@@ -215,13 +221,15 @@ namespace Capstone_UI
 
                     Game newGame = new Game // Create a new Game object with the provided metadata and paths
                     {
+                        Id = GameSelection.GamesList.Count == 0 ? 1 : GameSelection.GamesList.Max(g => g.Id) + 1, // Next free Id so each game gets its own leaderboard
                         Title = customTitle.Trim(),
                         ExecutablePath = finalStoredPath,
                         Category = customCategory.Trim(),
                         Description = customDescription.Trim(),
                         ImagePath = customImageList[0],
                         ImageList = customImageList,
-                        IsActive = true
+                        IsActive = true,
+                        HasScoreboard = hasScoreboard
                     };
 
                     newGame.Id = App.Db.InsertGame(newGame.Title); // Insert the new game into the database and retrieve its assigned ID
