@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Capstone_UI
 {
@@ -14,7 +16,7 @@ namespace Capstone_UI
     {
         public RangerTools()
         {
-            InitializeComponent(); //Initialize the components of the RangerTools page. Keep on top
+            InitializeComponent(); // Initialize the components of the RangerTools page. Keep on top
         }
 
         // Event handler for the back button click event. Navigates back to the previous page.
@@ -40,12 +42,148 @@ namespace Capstone_UI
             }
         }
 
+        private void Page_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                DependencyObject clickedElement = e.OriginalSource as DependencyObject;
+                bool clickedInsideTextBox = false;
+
+                while (clickedElement != null)
+                {
+                    if (clickedElement is TextBox)
+                    {
+                        clickedInsideTextBox = true;
+                        break;
+                    }
+                    if (clickedElement is Button || clickedElement is CheckBox)
+                    {
+                        return;
+                    }
+                    clickedElement = VisualTreeHelper.GetParent(clickedElement);
+                }
+
+                if (!clickedInsideTextBox)
+                {
+                    FocusManager.SetFocusedElement(this, this);
+                    Keyboard.ClearFocus();
+                    KeyboardHelper.CloseTouchKeyboard();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Focus clear error: {ex.Message}");
+            }
+        }
+
+        private void Thumbnail_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button button && button.DataContext is Game targetGame)
+                {
+                    string safeFolderName = string.Join("_", targetGame.Title.Split(Path.GetInvalidFileNameChars()));
+                    string gameImagesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games", safeFolderName, "Images");
+
+                    Directory.CreateDirectory(gameImagesFolder);
+
+                    // 1. Back up original state in case the user cancels
+                    string oldPrimaryPath = targetGame.ImagePath;
+                    var oldImageList = targetGame.ImageList != null ? new List<string>(targetGame.ImageList) : new List<string>();
+
+                    MessageBox.Show("Select up to 4 new custom thumbnails in your desired order. Click 'Cancel' when finished.", "Reset Thumbnails", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    List<string> stagedPaths = new List<string>();
+
+                    // 2. Collect up to 4 images sequentially
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        OpenFileDialog imageDialog = new OpenFileDialog
+                        {
+                            Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
+                            Title = $"Select Thumbnail {i} of 4 for '{targetGame.Title}' (Click Cancel to stop)",
+                        };
+
+                        if (imageDialog.ShowDialog() == true)
+                        {
+                            stagedPaths.Add(imageDialog.FileName);
+                        }
+                        else
+                        {
+                            break; // Stop collecting if cancelled
+                        }
+                    }
+
+                    // 3. If user cancelled immediately, restore original state
+                    if (stagedPaths.Count == 0)
+                    {
+                        targetGame.ImagePath = oldPrimaryPath;
+                        targetGame.ImageList = oldImageList;
+                        GamesDataGrid.Items.Refresh();
+
+                        MessageBox.Show("Thumbnail edit cancelled. Existing images were kept.", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+
+                    // 4. Wipe old files from disk to prevent bloat
+                    try
+                    {
+                        foreach (string existingFile in Directory.GetFiles(gameImagesFolder))
+                        {
+                            File.Delete(existingFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Could not clear old images: {ex.Message}");
+                    }
+
+                    List<string> newImageList = new List<string>();
+
+                    for (int i = 0; i < stagedPaths.Count; i++)
+                    {
+                        string sourcePath = stagedPaths[i];
+                        string extension = Path.GetExtension(sourcePath);
+                        string targetFileName = $"thumb_{i + 1}{extension}";
+                        string destPath = Path.Combine(gameImagesFolder, targetFileName);
+
+                        File.Copy(sourcePath, destPath, overwrite: true);
+
+                        string relativePath = Path.Combine("Games", safeFolderName, "Images", targetFileName).Replace("\\", "/");
+                        newImageList.Add("/" + relativePath);
+                    }
+
+                    // Set the new image list and primary display path on the game object
+                    targetGame.ImageList = newImageList;
+                    targetGame.ImagePath = newImageList[0];
+
+                    // INSTANT AUTO-SAVE: Persist changes to disk immediately using current DataGrid items source
+                    if (GamesDataGrid.ItemsSource is List<Game> currentList)
+                    {
+                        GameSelection.GamesList = currentList;
+                    }
+                    GameSelection.SaveGamesList();
+                    GameSelection.RefreshActiveGamesList();
+
+                    // Refresh the DataGrid to instantly render the new thumbnails on screen
+                    GamesDataGrid.Items.Refresh();
+
+                    MessageBox.Show($"Successfully reset, reordered, and saved thumbnails for '{targetGame.Title}'!", "Thumbnails Updated", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not update thumbnails: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
         // Event handler for the "Add Game" button click event. Opens a file dialog to select a game executable and adds it to the kiosk system.
         private void AddGameButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                KeyboardHelper.OpenTouchKeyboard(); //Opens Keyboard
+                KeyboardHelper.OpenTouchKeyboard(); // Opens Keyboard
 
                 string localGamesFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games"); // Define the local games folder path
                 Directory.CreateDirectory(localGamesFolder); // Ensure the local games folder exists
@@ -84,7 +222,7 @@ namespace Capstone_UI
                     {
                         if (string.IsNullOrEmpty(g.ExecutablePath)) return false;
 
-                        string existingFullPath = Path.IsPathRooted(g.ExecutablePath) //Check if the existing executable path is rooted (absolute) or relative
+                        string existingFullPath = Path.IsPathRooted(g.ExecutablePath) // Check if the existing executable path is rooted (absolute) or relative
                             ? g.ExecutablePath // If rooted, use it directly
                             : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, g.ExecutablePath); // If relative, combine it with the base directory to get the full path
 
@@ -122,7 +260,7 @@ namespace Capstone_UI
                         return;
                     }
 
-                    //Custom Cateory
+                    // Custom Category
                     string customCategory = KeyboardHelper.PromptWithKeyboard(
                         "Enter the category (e.g., Water Safety, Puzzle, ...):",
                         "Game Category",
@@ -130,7 +268,7 @@ namespace Capstone_UI
 
                     if (string.IsNullOrWhiteSpace(customCategory)) customCategory = "Added Games"; // Default category if the user cancels or enters an empty category
 
-                    //Custom Description
+                    // Custom Description
                     string customDescription = KeyboardHelper.PromptWithKeyboard(
                         "Enter a short description for the game:",
                         "Game Description",
@@ -169,11 +307,11 @@ namespace Capstone_UI
                     List<string> customImageList = new List<string>();
                     string imageTargetDirectory = Path.Combine(targetDirectory, "Images"); // Define the target directory for storing custom images (thumbnails) for the game
 
-                    MessageBox.Show("You can now select up to 4 custom screenshots/thumbnails for this game. Click 'Cancel' at any time to finish selecting.", "Custom Thumbnails", MessageBoxButton.OK, MessageBoxImage.Information); //Window informing about custom thumbnails
+                    MessageBox.Show("You can now select up to 4 custom screenshots/thumbnails for this game. Click 'Cancel' at any time to finish selecting.", "Custom Thumbnails", MessageBoxButton.OK, MessageBoxImage.Information); // Window informing about custom thumbnails
 
 
                     // Loop to allow the user to select up to 4 custom images for the game
-                    for (int i = 1; i <= 4; i++) 
+                    for (int i = 1; i <= 4; i++)
                     {
                         OpenFileDialog imageDialog = new OpenFileDialog
                         {
@@ -216,7 +354,7 @@ namespace Capstone_UI
 
                     if (customImageList.Count == 0)
                     {
-                        customImageList.Add("/Images/DefaultGameMenu.png"); //Default image in case there are no custom images
+                        customImageList.Add("/Images/DefaultGameMenu.png"); // Default image in case there are no custom images
                     }
 
                     Game newGame = new Game // Create a new Game object with the provided metadata and paths
@@ -229,7 +367,9 @@ namespace Capstone_UI
                         ImagePath = customImageList[0],
                         ImageList = customImageList,
                         IsActive = true,
-                        HasScoreboard = hasScoreboard
+                        HasScoreboard = hasScoreboard,
+                        GameStatus = "Healthy",
+                        LastReportDate = "--"
                     };
 
                     newGame.Id = App.Db.InsertGame(newGame.Title); // Insert the new game into the database and retrieve its assigned ID
@@ -268,13 +408,85 @@ namespace Capstone_UI
         }
 
 
-        private void ManageGameListButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Manage Game List" button click event. Displays the game management panel and populates the game list view with the current games.
+        private void ManageGameListButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Manage Game List" button click event. Displays the game management panel and populates the data grid with current games.
         {
             PanelMenuButtons.Visibility = Visibility.Collapsed; // Hide the main menu buttons panel to focus on game management
-            PanelManageGames.Visibility = Visibility.Visible; // Show the game management panel where users can edit game metadata, replace thumbnails, or remove games
-            GameListView.ItemsSource = null; // Clear the existing items in the game list view to ensure it is refreshed with the latest data
-            GameListView.ItemsSource = GameSelection.GamesList; // Set the items source of the game list view to the current list of games, allowing users to select and manage them
+            PanelManageGames.Visibility = Visibility.Visible; // Show the game management panel where users can view and edit games in the table
+            GamesDataGrid.ItemsSource = null; // Clear the existing items to ensure refresh
+            GamesDataGrid.ItemsSource = GameSelection.GamesList; // Set the items source to the current list of games
         }
+
+
+        private void EditDescriptionButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Get the specific Game object attached to the row where the button was clicked
+                if (sender is Button button && button.DataContext is Game targetGame)
+                {
+                    KeyboardHelper.OpenTouchKeyboard();
+
+                    string updatedDescription = KeyboardHelper.PromptWithKeyboard(
+                        $"Edit description for '{targetGame.Title}':",
+                        "Edit Description",
+                        targetGame.Description);
+
+                    if (updatedDescription != null) // If they didn't cancel
+                    {
+                        targetGame.Description = updatedDescription.Trim();
+                        if (GamesDataGrid.ItemsSource is List<Game> currentList)
+                        {
+                            GameSelection.GamesList = currentList;
+                        }
+                        GameSelection.SaveGamesList(); // Persist changes to disk
+                        GamesDataGrid.Items.Refresh(); // Refresh the grid view
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not edit description: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                KeyboardHelper.CloseTouchKeyboard();
+            }
+        }
+
+        private void InlineField_LostFocus(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Automatically save changes to disk whenever an inline text box loses focus
+                if (GamesDataGrid.ItemsSource is List<Game> currentList)
+                {
+                    GameSelection.GamesList = currentList;
+                }
+                GameSelection.SaveGamesList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Auto-save error: {ex.Message}");
+            }
+        }
+
+        private void ChkIsActive_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Instantly save when the visibility toggle is clicked
+                if (GamesDataGrid.ItemsSource is List<Game> currentList)
+                {
+                    GameSelection.GamesList = currentList;
+                }
+                GameSelection.SaveGamesList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Visibility save error: {ex.Message}");
+            }
+        }
+
 
         private void CloseManagePanel_Click(object sender, RoutedEventArgs e) // Event handler for the "Close" button click event in the game management panel. Hides the game management panel and returns to the main menu.
         {
@@ -282,41 +494,21 @@ namespace Capstone_UI
             PanelMenuButtons.Visibility = Visibility.Visible;
         }
 
-        private void GameListView_SelectionChanged(object sender, SelectionChangedEventArgs e) // Event handler for the selection change event of the game list view. Updates the text boxes with the selected game's metadata for editing.
-        {
-            if (GameListView.SelectedItem is Game selectedGame)
-            {
-                TxtEditTitle.Text = selectedGame.Title;
-                TxtEditCategory.Text = selectedGame.Category;
-                TxtEditDescription.Text = selectedGame.Description;
-            }
-        }
-
-        private void BtnSaveChanges_Click(object sender, RoutedEventArgs e) // Event handler for the "Save Changes" button click event in the game management panel. Saves the edited metadata of the selected game and updates the game list.
+        private void BtnSaveChanges_Click(object sender, RoutedEventArgs e) // Event handler for the "Save All Changes" button click event in the game management panel. Saves all rows in the DataGrid to disk.
         {
             try
             {
-                if (GameListView.SelectedItem is Game selectedGame)
+                if (GamesDataGrid.ItemsSource is List<Game> updatedList)
                 {
-                    selectedGame.Title = TxtEditTitle.Text.Trim();
-                    selectedGame.Category = TxtEditCategory.Text.Trim();
-                    selectedGame.Description = TxtEditDescription.Text.Trim();
-
+                    GameSelection.GamesList = updatedList;
                     GameSelection.SaveGamesList();
-                    GameListView.Items.Refresh();
 
-                    MessageBox.Show("Game information has been successfully edited!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Please select a game to edit.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    MessageBox.Show("All game configurations and visibility settings were saved successfully.", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving changes: {ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
             }
             finally
             {
@@ -327,76 +519,7 @@ namespace Capstone_UI
             PanelMenuButtons.Visibility = Visibility.Visible;
         }
 
-
-        private void BtnReplaceThumbnails_Click(object sender, RoutedEventArgs e) // Event handler for the "Replace Thumbnails" button click event in the game management panel. Allows the user to select new thumbnails for the selected game and updates the game's image list.
-        {
-            try
-            {
-                if (GameListView.SelectedItem is Game selectedGame)
-                {
-                    string safeFolderName = string.Join("_", selectedGame.Title.Split(Path.GetInvalidFileNameChars())); // Create a safe folder name by replacing invalid characters in the selected game's title with underscores
-                    string targetDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Games", safeFolderName); // Define the target directory for the selected game based on the safe folder name
-                    string imageTargetDirectory = Path.Combine(targetDirectory, "Images"); // Define the target directory for the game's images
-
-                    List<string> newImageList = new List<string>();
-
-                    MessageBox.Show("Select up to 4 new replacement thumbnails. Click 'Cancel' at any time to stop.", "Replace Thumbnails", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    for (int i = 1; i <= 4; i++)
-                    {
-                        OpenFileDialog imageDialog = new OpenFileDialog
-                        {
-                            Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All Files (*.*)|*.*",
-                            Title = $"Select Replacement Thumbnail {i} of 4 (Optional - Click Cancel to stop)"
-                        };
-
-                        if (imageDialog.ShowDialog() == true)
-                        {
-                            try
-                            {
-                                Directory.CreateDirectory(imageTargetDirectory); // Ensure the Images directory exists before copying the selected image
-                                string sourceImgPath = imageDialog.FileName; // Get the full path of the selected image file
-                                string imgFileName = Path.GetFileName(sourceImgPath); // Get the file name of the selected image (without the directory path)
-                                string destImgPath = Path.Combine(imageTargetDirectory, imgFileName); // Define the destination path for the image in the Images directory
-
-                                File.Copy(sourceImgPath, destImgPath, overwrite: true); // Copy the selected image to the Images directory, overwriting any existing file with the same name
-
-                                string relativeImgPath = Path.Combine("Games", safeFolderName, "Images", imgFileName).Replace("\\", "/");
-                                newImageList.Add("/" + relativeImgPath);
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"Could not copy thumbnail {i}: {ex.Message}", "Image Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if (newImageList.Count > 0)
-                    {
-                        selectedGame.ImageList = newImageList; // Update the selected game's image list with the new thumbnails
-                        selectedGame.ImagePath = newImageList[0]; // Update the selected game's main image path to the first new thumbnail
-                        GameSelection.SaveGamesList(); // Save the updated game list to persist the changes
-
-                        MessageBox.Show($"Thumbnails successfully updated ({newImageList.Count} new image(s) saved)!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Please select a game from the list first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Could not replace thumbnails: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-
-        private void RemoveGameButton_Click(object sender, RoutedEventArgs e)// Event handler for the "Remove Game" button click event in the game management panel. Prompts the user to enter the title of the game to remove and deletes it from the kiosk system.
+        private void RemoveGameButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Remove Game" button click event. Prompts the user to enter the title of the game to remove and deletes it from the kiosk system.
         {
             try
             {
@@ -409,7 +532,7 @@ namespace Capstone_UI
                 string currentGames = string.Join("\n", GameSelection.GamesList.Select(g => g.Title)); // Create a string listing all current game titles for display in the prompt 
 
                 string inputTitle = KeyboardHelper.PromptWithKeyboard(
-                    $"Current games on kiosk:\n{currentGames}\n\nEnter the exact title of the game you want to remove:", // Prompt the user to enter the title of the game to remove, displaying the current games for reference
+                    $"Current games on kiosk:\n{currentGames}\n\nEnter the exact title of the game you want to remove:",
                     "Remove Game",
                     "");
 
@@ -423,7 +546,7 @@ namespace Capstone_UI
                     {
                         try
                         {
-                            string fullPath = Path.IsPathRooted(match.ExecutablePath) //Check if the executable path is rooted (absolute) or relative
+                            string fullPath = Path.IsPathRooted(match.ExecutablePath) // Check if the executable path is rooted (absolute) or relative
                                 ? match.ExecutablePath
                                 : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, match.ExecutablePath);
 
@@ -463,14 +586,6 @@ namespace Capstone_UI
             }
         }
 
-        private void ChkIsActive_Click(object sender, RoutedEventArgs e) // Event handler for the "IsActive" checkbox click event in the game management panel. Saves the updated game list when the active status of a game is changed.
-        {
-            if (sender is CheckBox checkBox && checkBox.DataContext is Game clickedGame) // Check if the sender is a CheckBox and its DataContext is a Game object
-            {
-                GameSelection.SaveGamesList(); // Save the updated game list to persist the change in the active status of the clicked game
-            }
-        }
-
         private void TextBox_GotFocus(object sender, RoutedEventArgs e) // Event handler for the GotFocus event of text boxes in the game management panel. Opens the touch keyboard when a text box gains focus.
         {
             KeyboardHelper.OpenTouchKeyboard();
@@ -478,28 +593,30 @@ namespace Capstone_UI
 
         private void AnalyticsButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Analytic Tools" button. Loads analytics data and displays the analytics dashboard panel.
         {
-            PanelMenuButtons.Visibility = Visibility.Collapsed;
-            PanelAnalytics.Visibility = Visibility.Visible;
+            try
+            {
+                PanelMenuButtons.Visibility = Visibility.Collapsed;
+                PanelAnalytics.Visibility = Visibility.Visible;
 
-            int totalSessions = App.Db.GetTotalSessions();
-            double averageDuration = App.Db.GetAverageSessionDuration();
-            int adultSessions = App.Db.GetAdultSessionCount();
-            int under18Sessions = App.Db.GetUnder18SessionCount();
+                int totalSessions = App.Db.GetTotalSessions();
+                double averageDuration = App.Db.GetAverageSessionDuration();
+                int adultSessions = App.Db.GetAdultSessionCount();
+                int under18Sessions = App.Db.GetUnder18SessionCount();
 
-            int averageSeconds = (int)Math.Round(averageDuration);
-            int averageMinutes = averageSeconds / 60;
-            int remainingSeconds = averageSeconds % 60;
-
-            TxtTotalSessions.Text = totalSessions.ToString();
-            TxtAverageDuration.Text = $"{averageMinutes}m {remainingSeconds}s";
-            TxtAdultSessions.Text = adultSessions.ToString();
-            TxtUnder18Sessions.Text = under18Sessions.ToString();
-
-            AnalyticsGameList.ItemsSource = App.Db.GetGameUsage();
-            RecentSessionsList.ItemsSource = App.Db.GetRecentSessions();
+                TxtTotalSessions.Text = totalSessions.ToString();
+                int minutes = (int)(averageDuration / 60);
+                int seconds = (int)(averageDuration % 60);
+                TxtAverageDuration.Text = $"{minutes}m {seconds}s";
+                TxtAdultSessions.Text = adultSessions.ToString();
+                TxtUnder18Sessions.Text = under18Sessions.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not load analytics: {ex.Message}", "Analytics Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void CloseAnalyticsPanel_Click(object sender, RoutedEventArgs e) // Event handler for the analytics back button. Returns the Ranger to the main administration menu.
+        private void CloseAnalyticsPanel_Click(object sender, RoutedEventArgs e)
         {
             PanelAnalytics.Visibility = Visibility.Collapsed;
             PanelMenuButtons.Visibility = Visibility.Visible;
