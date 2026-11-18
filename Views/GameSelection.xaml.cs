@@ -22,7 +22,7 @@ namespace Capstone_UI
         {
             get
             {
-                if (_gamesList == null) // If the list is null, load it from disk
+                if (_gamesList == null)
                 {
                     LoadGamesListFromDisk();
                 }
@@ -31,53 +31,64 @@ namespace Capstone_UI
             set { _gamesList = value; }
         }
 
-        private DispatcherTimer _imageCycleTimer; // Timer for cycling through game images
-        private int _currentImageIndex = 0; // Index to keep track of the current image being displayed
+        private DispatcherTimer _imageCycleTimer;
+        private int _currentImageIndex = 0;
 
-        private const string DEFAULT_FALLBACK_IMAGE = "pack://application:,,,/Images/DefaultGameMenu.png"; // Default fallback image path
+        private const string DEFAULT_FALLBACK_IMAGE = "pack://application:,,,/Images/DefaultGameMenu.png";
 
         public GameSelection()
         {
             InitializeComponent();
 
-            _imageCycleTimer = new DispatcherTimer(); // Initialize the timer
-            _imageCycleTimer.Interval = TimeSpan.FromSeconds(3); // Set the interval to 3 seconds
-            _imageCycleTimer.Tick += ImageCycleTimer_Tick; // Subscribe to the Tick event of the timer
+            _imageCycleTimer = new DispatcherTimer();
+            _imageCycleTimer.Interval = TimeSpan.FromSeconds(3);
+            _imageCycleTimer.Tick += ImageCycleTimer_Tick;
 
-            this.Loaded += GameSelection_Loaded; // Subscribe to the Loaded event of the page
-            this.Unloaded += GameSelection_Unloaded; // Subscribe to the Unloaded event of the page
+            this.Loaded += GameSelection_Loaded;
+            this.Unloaded += GameSelection_Unloaded;
+        }
+
+        public static void RefreshActiveGamesList()
+        {
+            LoadGamesListFromDisk();
         }
 
         private void GameSelection_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadGamesListFromDisk(); // Load the games list from disk when the page is loaded
+            if (_gamesList == null)
+            {
+                LoadGamesListFromDisk();
+            }
 
-            foreach (var game in GamesList) // Iterate through each game in the list
-                App.Db.EnsureGame(game.Id, game.Title); // Ensure that each game is present in the database
+            foreach (var game in GamesList)
+                App.Db.EnsureGame(game.Id, game.Title);
 
-            var activeGames = GamesList.Where(g => g.IsActive).ToList(); // Filter the list to only include active games
+            var activeGames = GamesList.Where(g => g.IsActive).ToList();
 
-            GameListBox.ItemsSource = null; // Clear the current items source of the ListBox
-            GameListBox.ItemsSource = activeGames; // Set the items source of the ListBox to the list of active games
+            GameListBox.ItemsSource = null;
+            GameListBox.ItemsSource = activeGames;
 
             if (activeGames.Count > 0 && GameListBox.SelectedItem == null)
             {
                 GameListBox.SelectedIndex = 0;
             }
+            else if (GameListBox.SelectedItem is Game selectedGame)
+            {
+                UpdateThumbnailImage(selectedGame);
+            }
         }
 
-        private void GameSelection_Unloaded(object sender, RoutedEventArgs e) // Stop the image cycle timer when the page is unloaded
+        private void GameSelection_Unloaded(object sender, RoutedEventArgs e)
         {
             _imageCycleTimer.Stop();
         }
 
-        private void GameListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) // Event handler for when the selection in the ListBox changes
+        private void GameListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (GameListBox.SelectedItem is Game selectedGame) // Check if the selected item is a Game object
+            if (GameListBox.SelectedItem is Game selectedGame)
             {
-                // Update the UI elements with the selected game's details
                 TxtTitle.Text = selectedGame.Title;
-                TxtCategory.Text = selectedGame.Category; 
+                TxtCategory.Text = selectedGame.Category;
                 TxtDescription.Text = selectedGame.Description;
 
                 _imageCycleTimer.Stop();
@@ -86,14 +97,14 @@ namespace Capstone_UI
                 UpdateThumbnailImage(selectedGame);
                 LoadLeaderboard(selectedGame);
 
-                if (selectedGame.ImageList != null && selectedGame.ImageList.Count > 1) // If the selected game has multiple images, start the image cycle timer
+                if (selectedGame.ImageList != null && selectedGame.ImageList.Count > 1)
                 {
                     _imageCycleTimer.Start();
                 }
             }
         }
 
-        private void ImageCycleTimer_Tick(object sender, EventArgs e) // Event handler for the Tick event of the image cycle timer
+        private void ImageCycleTimer_Tick(object sender, EventArgs e)
         {
             if (GameListBox.SelectedItem is Game selectedGame && selectedGame.ImageList != null && selectedGame.ImageList.Count > 0)
             {
@@ -102,72 +113,55 @@ namespace Capstone_UI
             }
         }
 
-        private void UpdateThumbnailImage(Game game) // Method to update the thumbnail image based on the selected game
+        private void UpdateThumbnailImage(Game game)
         {
             try
             {
-                string imageToLoad = game.ImagePath; // Default to the main image path
+                string imageToLoad = game.ImagePath; // Default to primary image
 
-                if (game.ImageList != null && game.ImageList.Count > _currentImageIndex)
+                if (game.ImageList != null && game.ImageList.Count > 1 && _currentImageIndex > 0 && _currentImageIndex < game.ImageList.Count)
                 {
-                    imageToLoad = game.ImageList[_currentImageIndex]; // Use the current image from the ImageList if available
+                    imageToLoad = game.ImageList[_currentImageIndex]; // Use cycling index if active
                 }
 
-                BitmapImage bitmap = new BitmapImage(); // Create a new BitmapImage instance
-                bitmap.BeginInit(); // Begin initialization of the BitmapImage
-                bitmap.CacheOption = BitmapCacheOption.OnLoad; // Set the cache option to load the image immediately
-
-                if (!string.IsNullOrEmpty(imageToLoad) && imageToLoad.StartsWith("/Images/", StringComparison.OrdinalIgnoreCase)) // Check if the image path is a relative path within the application
-                {
-                    string cleanPath = imageToLoad.TrimStart('/');
-                    bitmap.UriSource = new Uri($"pack://application:,,,/{cleanPath}", UriKind.Absolute); // Set the UriSource to the relative path within the application
-                }
-                else if (!string.IsNullOrEmpty(imageToLoad)) // Check if the image path is a relative path on disk
+                if (!string.IsNullOrEmpty(imageToLoad))
                 {
                     string cleanPath = imageToLoad.TrimStart('/', '\\');
                     string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, cleanPath);
 
                     if (File.Exists(fullPath))
                     {
-                        bitmap.UriSource = new Uri(fullPath, UriKind.Absolute); // Set the UriSource to the full path on disk if the file exists
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad; // Load fully into RAM
+                        bitmap.UriSource = new Uri(fullPath, UriKind.Absolute);
+                        bitmap.EndInit();
+                        bitmap.Freeze(); // Release file lock instantly
+
+                        ImgThumbnail.Source = bitmap;
+                        return;
                     }
-                    else
-                    {
-                        bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute); // Use the default fallback image if the file does not exist
-                    }
-                }
-                else
-                {
-                    bitmap.UriSource = new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute); // Use the default fallback image if the image path is null or empty
                 }
 
-                bitmap.EndInit(); // End initialization of the BitmapImage
-                ImgThumbnail.Source = bitmap; // Set the source of the thumbnail image to the loaded BitmapImage
+                // Fallback if path is empty or file doesn't exist
+                ImgThumbnail.Source = new BitmapImage(new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to load thumbnail: {ex.Message}");
-
-                try
-                {
-                    ImgThumbnail.Source = new BitmapImage(new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute)); // Attempt to load the default fallback image if an exception occurs
-                }
-                catch
-                {
-                    ImgThumbnail.Source = null; // If even the fallback image fails to load, set the source to null
-                }
+                ImgThumbnail.Source = new BitmapImage(new Uri(DEFAULT_FALLBACK_IMAGE, UriKind.Absolute));
             }
         }
 
-        private void LoadLeaderboard(Game game) // Method to fill the leaderboard panel with the selected game's top players
+        private void LoadLeaderboard(Game game)
         {
             try
             {
-                var entries = App.Db.GetLeaderboard(game.Id); // Get the top players for this game from the database
+                var entries = App.Db.GetLeaderboard(game.Id);
                 foreach (var entry in entries)
-                    entry.GameHasScoreboard = game.HasScoreboard; // Lets plays without a score show "Did Not Finish" for scoreboard games
+                    entry.GameHasScoreboard = game.HasScoreboard;
                 LeaderboardList.ItemsSource = entries;
-                TxtLeaderboardEmpty.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed; // Show the empty message if nobody has played yet
+                TxtLeaderboardEmpty.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             }
             catch (Exception ex)
             {
@@ -177,7 +171,6 @@ namespace Capstone_UI
             }
         }
 
-        // Logic for exit via logo
         private void logoExit(object sender, RoutedEventArgs e)
         {
             try
@@ -191,35 +184,33 @@ namespace Capstone_UI
             }
         }
 
-        // Logic fo rback button to return to main menu
-
         private void gameSelectBackButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.NavigationService != null) // Check if the NavigationService is available
+            if (this.NavigationService != null)
             {
-                this.NavigationService.Content = null; // Clear the current content of the NavigationService
+                this.NavigationService.Content = null;
             }
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e) // Event handler for the Launch Game button click
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (GameListBox.SelectedItem is Game selectedGame) // Check if a game is selected in the ListBox
+            if (GameListBox.SelectedItem is Game selectedGame)
             {
-                if (string.IsNullOrWhiteSpace(selectedGame.ExecutablePath)) // Check if the executable path is null or empty
+                if (string.IsNullOrWhiteSpace(selectedGame.ExecutablePath))
                 {
                     MessageBox.Show("No game path specified.", "Missing Path", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 string fullExecutablePath;
-                if (Path.IsPathRooted(selectedGame.ExecutablePath)) // Check if the executable path is an absolute path
+                if (Path.IsPathRooted(selectedGame.ExecutablePath))
                 {
-                    fullExecutablePath = selectedGame.ExecutablePath; // Use the absolute path directly
+                    fullExecutablePath = selectedGame.ExecutablePath;
                 }
                 else
                 {
-                    string baseDir = AppDomain.CurrentDomain.BaseDirectory; // Get the base directory of the application
-                    fullExecutablePath = Path.Combine(baseDir, selectedGame.ExecutablePath); // Combine the base directory with the relative path to get the full path
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    fullExecutablePath = Path.Combine(baseDir, selectedGame.ExecutablePath);
                 }
 
                 if (!File.Exists(fullExecutablePath))
@@ -230,16 +221,16 @@ namespace Capstone_UI
 
                 try
                 {
-                    LoadingOverlay.Visibility = Visibility.Visible; // Show the loading overlay while the game is launching
+                    LoadingOverlay.Visibility = Visibility.Visible;
 
-                    var startInfo = new ProcessStartInfo // Create a new ProcessStartInfo instance to launch the game
+                    var startInfo = new ProcessStartInfo
                     {
-                        FileName = fullExecutablePath, // Set the FileName to the full path of the game executable
+                        FileName = fullExecutablePath,
                         WorkingDirectory = Path.GetDirectoryName(fullExecutablePath),
                         UseShellExecute = true
                     };
 
-                    var launchedAt = DateTimeOffset.UtcNow; // Remember when the game started so only a score from this play is used
+                    var launchedAt = DateTimeOffset.UtcNow;
                     using var process = Process.Start(startInfo);
                     if (process == null)
                     {
@@ -247,24 +238,24 @@ namespace Capstone_UI
                         return;
                     }
 
-                    var stopwatch = Stopwatch.StartNew(); // Start a stopwatch to measure the time taken for the game to run
+                    var stopwatch = Stopwatch.StartNew();
                     await process.WaitForExitAsync();
                     stopwatch.Stop();
 
-                    LoadingOverlay.Visibility = Visibility.Collapsed; // Hide the loading overlay after the game has exited
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
 
-                    var owner = Window.GetWindow(this); // Get the owner window of the current page
-                    owner?.Activate(); // Activate the owner window to bring it to the foreground
+                    var owner = Window.GetWindow(this);
+                    owner?.Activate();
 
-                    var prompt = new PlayerInfoWindow { Owner = owner }; // Create a new instance of the PlayerInfoWindow to prompt for user information
+                    var prompt = new PlayerInfoWindow { Owner = owner };
                     if (prompt.ShowDialog() != true)
                         return;
 
-                    int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult); // Insert the user information into the database and get the user ID
-                    int? score = LiveScoreReader.TryReadScore(launchedAt); // Score reported by the game, or null if it doesn't report one
-                    App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds); // Insert the game data into the database, including the user ID, game ID, score, and elapsed time
+                    int userId = App.Db.InsertUser(prompt.Username, prompt.IsAdult);
+                    int? score = LiveScoreReader.TryReadScore(launchedAt);
+                    App.Db.InsertGameData(userId, selectedGame.Id, score, (int)stopwatch.Elapsed.TotalSeconds);
 
-                    LoadLeaderboard(selectedGame); // Refresh the leaderboard so the new player shows up right away
+                    LoadLeaderboard(selectedGame);
                 }
                 catch (Exception ex)
                 {
@@ -281,25 +272,25 @@ namespace Capstone_UI
             }
         }
 
-        private static string GetJsonFilePath() // Method to get the path of the JSON file that stores the list of installed games
+        private static string GetJsonFilePath()
         {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "installedGames.json"); // Return the full path to the installedGames.json file in the application's base directory
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "installedGames.json");
         }
 
-        public static void LoadGamesListFromDisk() // Method to load the list of installed games from disk
+        public static void LoadGamesListFromDisk()
         {
-            string filePath = GetJsonFilePath(); // Get the path of the JSON file that stores the list of installed games
+            string filePath = GetJsonFilePath();
 
-            if (File.Exists(filePath)) // Check if the JSON file exists
+            if (File.Exists(filePath))
             {
                 try
                 {
                     string json = File.ReadAllText(filePath);
-                    _gamesList = System.Text.Json.JsonSerializer.Deserialize<List<Game>>(json); // Deserialize the JSON content into a list of Game objects
+                    _gamesList = System.Text.Json.JsonSerializer.Deserialize<List<Game>>(json);
 
-                    if (_gamesList != null && !json.Contains("IsActive", StringComparison.OrdinalIgnoreCase)) // If the JSON does not contain the IsActive property, set all games to active by default
+                    if (_gamesList != null && !json.Contains("IsActive", StringComparison.OrdinalIgnoreCase))
                     {
-                        foreach (var g in _gamesList) // Set the IsActive property of each game to true
+                        foreach (var g in _gamesList)
                         {
                             g.IsActive = true;
                         }
@@ -312,69 +303,22 @@ namespace Capstone_UI
                 }
             }
 
-            if (_gamesList == null) // If the list is still null after attempting to load from disk, initialize it with default games
+            if (_gamesList == null)
             {
-                _gamesList = new List<Game> // Initialize the list of games with default values
-                {
-                    new Game
-                    {
-                        Id = 1,
-                        Title = "I Spy Water Safety",
-                        ImagePath = "/Images/I Spy Water Safety Menu.png",
-                        ImageList = new List<string> { "/Images/I Spy Water Safety Menu.png", "/Images/I Spy Water Safety Character Select.png", "/Images/I Spy Water Safety Gameplay.png" },
-                        Category = "Water Safety",
-                        Description = "Water Safety Game (Will display later)",
-                        ExecutablePath = @"Games\Ashley KSU Games\I Spy Water Safety\Team 1\waterfinalbuild\waterfinalbuild\Capstone1.0.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 2,
-                        Title = "Water Resource Game",
-                        ImagePath = "/Images/Water Management Menu.png",
-                        ImageList = new List<string> { "/Images/Water Management Menu.png", "/Images/Water Management Gameplay.png", "/Images/Water Management Gameplay 2.png", "/Images/Water Management Gameplay 3.png" },
-                        Category = "Water Resource",
-                        Description = "Water Resource Game (Will display later).",
-                        ExecutablePath = @"Games\Ashley KSU Games\Water Resource Game\New Build\Builds\Windows\x64\Water Management - A Flowing Puzzle.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 3,
-                        Title = "Carters Lake Boating Safety",
-                        ImagePath = "/Images/A Boating Game Menu.png",
-                        ImageList = new List<string> { "/Images/A Boating Game Menu.png", "/Images/A Boating Game Character Select.png", "/Images/A Boating Game Gameplay.png", "/Images/A Boating Game GamePlay 2.png", "/Images/A Boating Game Quiz.png" },
-                        Category = "Boat Safety",
-                        Description = "Carters Lake Boating Safety game teaches players about safe boating practices on Carters Lake.",
-                        ExecutablePath = @"Games\Ashley KSU Games\Carters Lake Boating Safety game folder Hard Copie\Windows\A Boating Game.exe",
-                        IsActive = true
-                    },
-                    new Game
-                    {
-                        Id = 4,
-                        Title = "Drawing The Night Sky",
-                        ImagePath = "/Images/Drawing The Night Sky Menu.png",
-                        ImageList = new List<string> { "/Images/Drawing The Night Sky Menu.png", "/Images/Drawing The Night Sky Gameplay 1.png", "/Images/Drawing The Night Sky Gameplay 2.png", "/Images/Drawing The Night Sky gameplay 3.png" },
-                        Category = "Astrology",
-                        Description = "Drawing The Night Sky game helps players learn about constellations and celestial objects.",
-                        ExecutablePath = @"Games\Ashley KSU Games\DrawingTheNightSky\DrawingTheNightSky.exe",
-                        IsActive = true
-                    }
-                };
-
+                _gamesList = new List<Game>();
                 SaveGamesList();
             }
         }
 
-        public static void SaveGamesList() // Method to save the list of installed games to disk
+        public static void SaveGamesList()
         {
             try
             {
-                string json = System.Text.Json.JsonSerializer.Serialize(_gamesList, new System.Text.Json.JsonSerializerOptions // Serialize the list of Game objects to JSON format with indented formatting
+                string json = System.Text.Json.JsonSerializer.Serialize(_gamesList, new System.Text.Json.JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
-                File.WriteAllText(GetJsonFilePath(), json); // Write the JSON content to the installedGames.json file in the application's base directory
+                File.WriteAllText(GetJsonFilePath(), json);
             }
             catch (Exception ex)
             {
@@ -382,33 +326,33 @@ namespace Capstone_UI
             }
         }
 
-        public static void RemoveGameByTitle(string title) // Method to remove a game from the list by its title
+        public static void RemoveGameByTitle(string title)
         {
             if (_gamesList != null)
             {
-                var gameToRemove = _gamesList.FirstOrDefault(g => g.Title.Equals(title, StringComparison.OrdinalIgnoreCase)); // Find the game in the list that matches the specified title (case-insensitive)
+                var gameToRemove = _gamesList.FirstOrDefault(g => g.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
                 if (gameToRemove != null)
                 {
                     if (!string.IsNullOrEmpty(gameToRemove.ExecutablePath))
                     {
                         try
                         {
-                            string fullPath = Path.IsPathRooted(gameToRemove.ExecutablePath) // Check if the executable path is an absolute path
-                                ? gameToRemove.ExecutablePath // Use the absolute path directly
-                                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, gameToRemove.ExecutablePath); // Combine the application's base directory with the relative path to get the full path
+                            string fullPath = Path.IsPathRooted(gameToRemove.ExecutablePath)
+                                ? gameToRemove.ExecutablePath
+                                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, gameToRemove.ExecutablePath);
 
-                            string gameDirectory = Path.GetDirectoryName(fullPath); // Get the directory of the game's executable
+                            string gameDirectory = Path.GetDirectoryName(fullPath);
 
-                            if (!string.IsNullOrEmpty(gameDirectory) && // Check if the game directory is not null or empty
+                            if (!string.IsNullOrEmpty(gameDirectory) &&
                                 gameDirectory.Contains("Games", StringComparison.OrdinalIgnoreCase) &&
                                 Directory.Exists(gameDirectory))
                             {
-                                foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories)) // Iterate through all files in the game directory and its subdirectories
+                                foreach (string file in Directory.GetFiles(gameDirectory, "*.*", SearchOption.AllDirectories))
                                 {
-                                    File.SetAttributes(file, FileAttributes.Normal); // Set the file attributes to normal to ensure that read-only files can be deleted
+                                    File.SetAttributes(file, FileAttributes.Normal);
                                 }
 
-                                Directory.Delete(gameDirectory, recursive: true); // Delete the game directory and all its contents recursively
+                                Directory.Delete(gameDirectory, recursive: true);
                             }
                         }
                         catch (Exception ex)
@@ -417,8 +361,8 @@ namespace Capstone_UI
                         }
                     }
 
-                    _gamesList.Remove(gameToRemove); // Remove the game from the list of installed games
-                    SaveGamesList(); // Save the updated list of installed games to disk
+                    _gamesList.Remove(gameToRemove);
+                    SaveGamesList();
                 }
             }
         }

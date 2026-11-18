@@ -1,75 +1,137 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Text.Json.Serialization; // Make sure this namespace is included
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Capstone_UI.Models
 {
-    public class Game
+    public class Game : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
         public int Id { get; set; }
 
-        public string Title { get; set; }
+        private string _title;
+        public string Title
+        {
+            get => _title;
+            set { _title = value; OnPropertyChanged(nameof(Title)); }
+        }
 
+        private string _category;
+        public string Category
+        {
+            get => _category;
+            set { _category = value; OnPropertyChanged(nameof(Category)); }
+        }
 
-        public string Category { get; set; }
-
-        public string Description { get; set; }
+        private string _description;
+        public string Description
+        {
+            get => _description;
+            set { _description = value; OnPropertyChanged(nameof(Description)); }
+        }
 
         public string ExecutablePath { get; set; }
 
-        public string ImagePath { get; set; }
+        private string _imagePath;
+        public string ImagePath
+        {
+            get => _imagePath;
+            set
+            {
+                if (_imagePath != value)
+                {
+                    _imagePath = value;
+                    _cachedImagePath = null;
+                    _cachedImageSource = null;
 
+                    OnPropertyChanged(nameof(ImagePath));
+                    OnPropertyChanged(nameof(SafeImagePath));
+                }
+            }
+        }
 
-        public List<string> ImageList { get; set; } = new List<string>();
+        private List<string> _imageList = new List<string>();
+        public List<string> ImageList
+        {
+            get => _imageList;
+            set { _imageList = value; OnPropertyChanged(nameof(ImageList)); }
+        }
 
+        private bool _isActive = true;
+        public bool IsActive
+        {
+            get => _isActive;
+            set { _isActive = value; OnPropertyChanged(nameof(IsActive)); }
+        }
 
-        public bool IsActive { get; set; } = true;
+        public bool HasScoreboard { get; set; }
 
+        private string _gameStatus = "Healthy";
+        public string GameStatus
+        {
+            get => _gameStatus;
+            set { _gameStatus = value; OnPropertyChanged(nameof(GameStatus)); }
+        }
 
-        public bool HasScoreboard { get; set; } // True for games that report a score, so a play without one means the player didn't finish
+        private string _lastReportDate = "--";
+        public string LastReportDate
+        {
+            get => _lastReportDate;
+            set { _lastReportDate = value; OnPropertyChanged(nameof(LastReportDate)); }
+        }
 
+        // Ignore cache properties from JSON serialization
+        [JsonIgnore]
+        private string _cachedImagePath;
 
-        public string SafeImagePath // Property to get a valid image path, falling back to a default if necessary
+        [JsonIgnore]
+        private ImageSource _cachedImageSource;
+
+        [JsonIgnore]
+        public ImageSource SafeImagePath
         {
             get
             {
-                if (!string.IsNullOrEmpty(ImagePath)) // Check if the primary image path is set
+                try
                 {
-                    if (ImagePath.StartsWith("/Images/", System.StringComparison.OrdinalIgnoreCase)) // If the image path is already a valid relative path, return it
-                    {
-                        return ImagePath;
-                    }
+                    string path = string.IsNullOrEmpty(ImagePath) ? "Images/DefaultGameMenu.png" : ImagePath;
+                    if (path.StartsWith("/")) path = path.Substring(1);
+                    string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
 
-                    string cleanPath = ImagePath.TrimStart('/', '\\');
-                    string fullPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, cleanPath);
-                    if (File.Exists(fullPath))
+                    if (_cachedImagePath != fullPath || _cachedImageSource == null)
                     {
-                        return ImagePath;
-                    }
-                }
-
-                if (ImageList != null && ImageList.Count > 0) // Check if there are any images in the list
-                {
-                    foreach (var img in ImageList) // Iterate through the image list to find a valid image
-                    {
-                        if (!string.IsNullOrEmpty(img))
+                        if (File.Exists(fullPath))
                         {
-                            if (img.StartsWith("/Images/", System.StringComparison.OrdinalIgnoreCase))
-                            {
-                                return img;
-                            }
+                            var bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.UriSource = new Uri(fullPath, UriKind.Absolute);
+                            bitmap.EndInit();
+                            bitmap.Freeze();
 
-                            string cleanPath = img.TrimStart('/', '\\');
-                            string fullPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, cleanPath);
-
-                            if (File.Exists(fullPath))
-                            {
-                                return img;
-                            }
+                            _cachedImagePath = fullPath;
+                            _cachedImageSource = bitmap;
+                        }
+                        else
+                        {
+                            _cachedImageSource = null;
                         }
                     }
-                }
 
-                return "/Images/DefaultGameMenu.png";
+                    return _cachedImageSource;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
     }
