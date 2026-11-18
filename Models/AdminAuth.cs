@@ -26,7 +26,7 @@ namespace Capstone_UI.Models
             public int Bottom;
         }
 
-        // Helper method to pop up standard MessageBoxes higher at Y = 120
+        // Helper method to pop up standard MessageBoxes higher
         private static MessageBoxResult ShowMessageBoxAtTop(string message, string title, MessageBoxButton button, MessageBoxImage icon)
         {
             // Background task that waits for the message box window to spawn, then moves it to Top = 120
