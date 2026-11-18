@@ -127,5 +127,11 @@ namespace Capstone_UI
 
             MainFrame.Navigate(new RangerTools());
         }
+
+        private void TestErrorButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("This is a test error message to verify error dialog behavior.", "Kiosk Error Test", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
     }
 }
