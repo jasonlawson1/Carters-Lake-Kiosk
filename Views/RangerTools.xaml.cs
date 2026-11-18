@@ -591,7 +591,9 @@ namespace Capstone_UI
             KeyboardHelper.OpenTouchKeyboard();
         }
 
-        private void AnalyticsButton_Click(object sender, RoutedEventArgs e) // Event handler for the "Analytic Tools" button. Loads analytics data and displays the analytics dashboard panel.
+        private void AnalyticsButton_Click(
+            object sender,
+            RoutedEventArgs e)
         {
             try
             {

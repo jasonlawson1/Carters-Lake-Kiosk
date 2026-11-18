@@ -1,0 +1,158 @@
+<Page
+    x:Class="Capstone_UI.GameDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="GameDetailPage"
+    Background="#F4F0E7">
+
+    <Page.Resources>
+        <SolidColorBrush
+            x:Key="ForestGreen"
+            Color="#1E5631" />
+
+        <SolidColorBrush
+            x:Key="AccentGold"
+            Color="#C7A441" />
+    </Page.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock
+                x:Name="GameNameText"
+                Text="Game Details"
+                FontSize="30"
+                FontWeight="Bold"
+                Foreground="{StaticResource ForestGreen}" />
+
+            <TextBlock
+                Text="Detailed statistics for the selected game."
+                FontSize="15"
+                Margin="0,4,0,18" />
+        </StackPanel>
+
+        <Grid
+            Grid.Row="1"
+            Margin="0,0,0,20">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Background="White"
+                BorderBrush="{StaticResource AccentGold}"
+                BorderThickness="1"
+                Margin="5"
+                Padding="15">
+
+                <StackPanel>
+                    <TextBlock
+                        Text="Sessions"
+                        FontWeight="Bold" />
+
+                    <TextBlock
+                        x:Name="SessionsText"
+                        FontSize="26"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource ForestGreen}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Grid.Column="1"
+                Background="White"
+                BorderBrush="{StaticResource AccentGold}"
+                BorderThickness="1"
+                Margin="5"
+                Padding="15">
+
+                <StackPanel>
+                    <TextBlock
+                        Text="Average Playtime"
+                        FontWeight="Bold" />
+
+                    <TextBlock
+                        x:Name="AverageText"
+                        FontSize="26"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource ForestGreen}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Grid.Column="2"
+                Background="White"
+                BorderBrush="{StaticResource AccentGold}"
+                BorderThickness="1"
+                Margin="5"
+                Padding="15">
+
+                <StackPanel>
+                    <TextBlock
+                        Text="Completion Rate"
+                        FontWeight="Bold" />
+
+                    <TextBlock
+                        x:Name="CompletionText"
+                        FontSize="26"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource ForestGreen}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Grid.Column="3"
+                Background="White"
+                BorderBrush="{StaticResource AccentGold}"
+                BorderThickness="1"
+                Margin="5"
+                Padding="15">
+
+                <StackPanel>
+                    <TextBlock
+                        Text="Best Score"
+                        FontWeight="Bold" />
+
+                    <TextBlock
+                        x:Name="BestScoreText"
+                        FontSize="26"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource ForestGreen}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border
+            Grid.Row="2"
+            Background="White"
+            BorderBrush="#DDD7C8"
+            BorderThickness="1"
+            Padding="20">
+
+            <StackPanel>
+                <TextBlock
+                    Text="Session Outcomes"
+                    FontSize="22"
+                    FontWeight="Bold"
+                    Foreground="{StaticResource ForestGreen}"
+                    Margin="0,0,0,12" />
+
+                <TextBlock
+                    x:Name="OutcomeText"
+                    FontSize="16"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
