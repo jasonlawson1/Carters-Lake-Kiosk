@@ -13,6 +13,9 @@
         <SolidColorBrush
             x:Key="AccentGold"
             Color="#C7A441" />
+
+        <BooleanToVisibilityConverter
+            x:Key="BooleanToVisibilityConverter" />
     </Page.Resources>
 
     <Grid Margin="30">
@@ -38,59 +41,90 @@
             Grid.Row="1"
             VerticalScrollBarVisibility="Auto">
 
-            <ItemsControl x:Name="CategoryList">
+            <ItemsControl
+                x:Name="CategoryList"
+                HorizontalContentAlignment="Stretch">
+
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Expander
-                            Margin="0,5"
-                            Background="White"
-                            BorderBrush="{StaticResource AccentGold}"
-                            BorderThickness="1">
 
-                            <Expander.Header>
+                        <StackPanel Margin="0,5">
+
+                            <ToggleButton
+                                x:Name="CategoryToggle"
+                                Background="White"
+                                BorderBrush="{StaticResource AccentGold}"
+                                BorderThickness="1"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Padding="8,6">
+
                                 <Grid
-                                    Width="850"
-                                    Margin="10">
+                                    HorizontalAlignment="Stretch">
 
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="30" />
+                                        <ColumnDefinition Width="230" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="140" />
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock
+                                        Grid.Column="0"
+                                        Text="⌄"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
                                         Text="{Binding CategoryName}"
                                         FontSize="17"
                                         FontWeight="Bold"
+                                        HorizontalAlignment="Left"
                                         VerticalAlignment="Center" />
 
-                                    <Border
-                                        Grid.Column="1"
-                                        Height="22"
-                                        Width="{Binding BarWidth}"
-                                        Background="{StaticResource ForestGreen}"
-                                        HorizontalAlignment="Left"
-                                        CornerRadius="3" />
+                                    <Grid
+                                        Grid.Column="2"
+                                        Margin="10,0,25,0"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Stretch">
+
+                                        <Border
+                                            Height="22"
+                                            Width="{Binding BarWidth}"
+                                            Background="{StaticResource ForestGreen}"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="3" />
+                                    </Grid>
 
                                     <TextBlock
-                                        Grid.Column="2"
-                                        Text="{Binding SessionCount}"
+                                        Grid.Column="3"
+                                        Text="{Binding SessionCount, StringFormat={}{0} sessions}"
                                         FontWeight="Bold"
                                         HorizontalAlignment="Right"
-                                        VerticalAlignment="Center" />
+                                        VerticalAlignment="Center"
+                                        TextAlignment="Right"
+                                        Margin="0,0,10,0" />
                                 </Grid>
-                            </Expander.Header>
+                            </ToggleButton>
 
                             <Border
                                 Background="#F7F3E8"
-                                Padding="15">
+                                Padding="15"
+                                Visibility="{Binding
+                                    IsChecked,
+                                    ElementName=CategoryToggle,
+                                    Converter={StaticResource BooleanToVisibilityConverter}}">
 
                                 <TextBlock
                                     Text="{Binding GamesDisplay, StringFormat=Contributing games: {0}}"
                                     FontSize="14"
                                     TextWrapping="Wrap" />
                             </Border>
-                        </Expander>
+
+                        </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

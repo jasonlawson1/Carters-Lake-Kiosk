@@ -38,27 +38,36 @@
             Grid.Row="1"
             VerticalScrollBarVisibility="Auto">
 
-            <ItemsControl x:Name="GamePopularityList">
+            <ItemsControl
+                x:Name="GamePopularityList"
+                HorizontalContentAlignment="Stretch">
+
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
+
                         <Button
                             Margin="0,5"
                             Padding="12"
                             Background="White"
                             BorderBrush="{StaticResource AccentGold}"
                             BorderThickness="1"
+                            HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Stretch"
-                            VerticalContentAlignment="Center"
                             Click="GameRow_Click">
 
-                            <Grid>
+                            <Grid
+                                HorizontalAlignment="Stretch">
+
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="230" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="130" />
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
+                                <StackPanel
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Left">
+
                                     <TextBlock
                                         Text="{Binding GameName}"
                                         FontSize="17"
@@ -71,7 +80,9 @@
 
                                 <Grid
                                     Grid.Column="1"
-                                    VerticalAlignment="Center">
+                                    Margin="10,0,25,0"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Stretch">
 
                                     <Border
                                         Height="22"
@@ -86,7 +97,9 @@
                                     Text="{Binding SessionCount, StringFormat={}{0} sessions}"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Right"
-                                    FontWeight="Bold" />
+                                    TextAlignment="Right"
+                                    FontWeight="Bold"
+                                    Margin="0,0,10,0" />
                             </Grid>
                         </Button>
                     </DataTemplate>
