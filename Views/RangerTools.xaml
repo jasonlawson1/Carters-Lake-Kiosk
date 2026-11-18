@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:Capstone_UI"
       mc:Ignorable="d" 
       d:DesignHeight="800" d:DesignWidth="1024"
-      Title="RangerTools">
+      Title="RangerTools"
+      PreviewMouseDown="Page_PreviewMouseDown">
 
     <Page.Resources>
         <!-- Nature Color Brushes -->
@@ -87,16 +88,18 @@
     </Page.Resources>
 
     <Grid>
+
         <!-- CENTRAL "BUBBLY BOX" CARD CONTAINER -->
-        <Border Background="#E6F5F2EB" 
-                BorderBrush="{StaticResource AccentGold}" 
-                BorderThickness="2.5" 
-                CornerRadius="32" 
-                Padding="35,20,35,20" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Top" 
-                Margin="0,10,0,0"
-                Width="950" Height="660">
+        <Border x:Name="MainCardBorder"
+        Background="#E6F5F2EB" 
+        BorderBrush="{StaticResource AccentGold}" 
+        BorderThickness="2.5" 
+        CornerRadius="32" 
+        Padding="35,20,35,20" 
+        HorizontalAlignment="Center" 
+        VerticalAlignment="Top" 
+        Margin="0,10,0,0"
+        Width="950" Height="660">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" ShadowDepth="10" Direction="270" Color="Black" Opacity="0.35"/>
             </Border.Effect>
@@ -109,78 +112,133 @@
                     <Button Content="➕ Add Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="AddGameButton_Click"/>
                     <Button Content="📝 Manage Game List" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="ManageGameListButton_Click"/>
                     <Button Content="🗑️ Remove Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="RemoveGameButton_Click"/>
-                    <Button Content="📊 Analytic Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Click="AnalyticsButton_Click"/>
+                    <Button Content="📊 Analytics and Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Click="AnalyticsButton_Click"/>
                 </StackPanel>
 
                 <!-- 2. GAME MANAGEMENT & EDIT PANEL -->
                 <StackPanel x:Name="PanelManageGames" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
 
                     <!-- Header -->
-                    <TextBlock Text="Edit Game Information &amp; Visibility" 
+                    <TextBlock Text="Manage Game Library &amp; Status" 
                                FontSize="20" 
                                FontWeight="Black" 
                                Foreground="{StaticResource ForestGreen}" 
                                HorizontalAlignment="Left"
                                Margin="0,0,0,8"/>
 
-                    <!-- Game Selector Scrollable List Box -->
-                    <TextBlock Text="Select a Game (Check box to toggle kiosk visibility):" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
-                    <ListBox x:Name="GameListView" 
-         Height="110" 
-         FontSize="15" 
-         SelectionChanged="GameListView_SelectionChanged" 
-         Margin="0,0,0,10" 
-         BorderBrush="{StaticResource AccentGold}" 
-         BorderThickness="1.5"
-         ScrollViewer.VerticalScrollBarVisibility="Auto">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Width="820" Margin="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="150"/>
-                                    </Grid.ColumnDefinitions>
+                    <!-- Subtitle / Instructions -->
+                    <TextBlock Text="Review game status, toggle active kiosk visibility, or edit details directly in the table below:" 
+                               FontSize="13" FontWeight="SemiBold" Foreground="#4A584D" Margin="0,0,0,10"/>
 
-                                    <!-- Game Title -->
-                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Padding="4"/>
+                    <!-- Editable DataGrid View (Locked to fill window with automatic text wrapping) -->
+                    <DataGrid x:Name="GamesDataGrid" 
+          AutoGenerateColumns="False" 
+          CanUserAddRows="False" 
+          Height="450"
+          FontSize="13"
+          Background="White" 
+          BorderBrush="{StaticResource AccentGold}" 
+          BorderThickness="1.5"
+          SelectionMode="Single"
+          HorizontalGridLinesBrush="#E0E0E0"
+          VerticalGridLinesBrush="#E0E0E0"
+          ScrollViewer.VerticalScrollBarVisibility="Auto"
+          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+          ScrollViewer.CanContentScroll="True"
+          Margin="0,0,0,12">
+                        <DataGrid.Columns>
+                            <!-- Thumbnail Preview Column (Clickable for editing) -->
+                            <DataGridTemplateColumn Header="Thumbnail" Width="95" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Cursor="Hand" Click="Thumbnail_Click" Background="Transparent" BorderThickness="0" Padding="0">
+                                            <Border Width="70" Height="70" CornerRadius="8" BorderBrush="{StaticResource AccentGold}" BorderThickness="1.5" ClipToBounds="True" Margin="5" VerticalAlignment="Center">
+                                                <Image Source="{Binding SafeImagePath, TargetNullValue='/Images/DefaultGameMenu.png', FallbackValue='/Images/DefaultGameMenu.png'}" 
+                           Stretch="UniformToFill" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                                    <!-- Dynamic Checkbox - Toggles and saves instantly without requiring row selection -->
-                                    <CheckBox Grid.Column="1" 
-                          Content="Visible" 
-                          IsChecked="{Binding IsActive, Mode=TwoWay}" 
-                          Click="ChkIsActive_Click"
-                          FontSize="14" 
-                          FontWeight="Bold" 
-                          Foreground="{StaticResource ForestGreen}" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Right" 
-                          Cursor="Hand"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                            <!-- Title (Wrapped TextBox) -->
+                            <DataGridTemplateColumn Header="Title" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" 
+                                                 GotFocus="TextBox_GotFocus"
+                                                 LostFocus="InlineField_LostFocus"
+                                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                                 VerticalContentAlignment="Top"
+                                                 BorderThickness="0" Background="Transparent" FontWeight="Bold" Margin="4"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                    <!-- Uncompressed Edit Fields -->
-                    <TextBlock Text="Title:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
-                    <TextBox x:Name="TxtEditTitle" Height="38" FontSize="15" Padding="8,6" Margin="0,0,0,8" BorderBrush="{StaticResource AccentGold}" BorderThickness="1" GotFocus="TextBox_GotFocus"/>
+                            <!-- Category (Wrapped TextBox) -->
+                            <DataGridTemplateColumn Header="Category" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Category, UpdateSourceTrigger=PropertyChanged}" 
+                                                 GotFocus="TextBox_GotFocus"
+                                                 LostFocus="InlineField_LostFocus"
+                                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                                 VerticalContentAlignment="Top"
+                                                 BorderThickness="0" Background="Transparent" Margin="4"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                    <TextBlock Text="Category:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
-                    <TextBox x:Name="TxtEditCategory" Height="38" FontSize="15" Padding="8,6" Margin="0,0,0,8" BorderBrush="{StaticResource AccentGold}" BorderThickness="1" GotFocus="TextBox_GotFocus"/>
+                            <!-- Description (Wrapped TextBox) -->
+                            <DataGridTemplateColumn Header="Description" Width="1.5*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" 
+                                                 GotFocus="TextBox_GotFocus"
+                                                 LostFocus="InlineField_LostFocus"
+                                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                                 VerticalContentAlignment="Top"
+                                                 BorderThickness="0" Background="Transparent" Margin="4"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                    <TextBlock Text="Description:" FontSize="13" FontWeight="Bold" Foreground="#4A584D" Margin="0,0,0,2"/>
-                    <TextBox x:Name="TxtEditDescription" 
-                             Height="75" 
-                             AcceptsReturn="True" 
-                             TextWrapping="Wrap" 
-                             FontSize="14" 
-                             Padding="8" 
-                             Margin="0,0,0,10" 
-                             BorderBrush="{StaticResource AccentGold}" 
-                             BorderThickness="1"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto"
-                             GotFocus="TextBox_GotFocus"/>
+                            <!-- Visibility Switch -->
+                            <DataGridTemplateColumn Header="Visibility" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" 
+                                                  Click="ChkIsActive_Click"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                    <!-- Bottom Action Buttons Row (Back, Thumbnails, Save) -->
+                            <!-- Game Status -->
+                            <DataGridTemplateColumn Header="Status" Width="100" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding GameStatus, FallbackValue='Healthy'}" 
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Last Recorded Report Date -->
+                            <DataGridTemplateColumn Header="Last Report" Width="95" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding LastReportDate, TargetNullValue='--', FallbackValue='--'}" 
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Bottom Action Buttons Row (Back & Save) -->
                     <Grid VerticalAlignment="Bottom">
                         <!-- Left: Back Button -->
                         <Button Content="⬅️ Back" 
@@ -190,16 +248,19 @@
                                 Click="CloseManagePanel_Click" 
                                 Width="110" Height="42"/>
 
-                        <!-- Right: Thumbnails & Save Changes Buttons -->
-                        <!-- Right: Thumbnails & Save & Close Buttons -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button x:Name="BtnReplaceThumbnails" Content="📷 Replace Thumbnails (4)" Style="{StaticResource EditActionButtonStyle}" Height="42" Margin="0,0,10,0" Click="BtnReplaceThumbnails_Click"/>
-                            <Button x:Name="BtnSaveChanges" Content="💾 Save &amp; Close" Style="{StaticResource EditActionButtonStyle}" Background="#2C5E3B" Height="42" Click="BtnSaveChanges_Click"/>
-                        </StackPanel>
+                        <!-- Right: Save Changes Button -->
+                        <Button x:Name="BtnSaveChanges" 
+                                Content="💾 Save All Changes" 
+                                Style="{StaticResource EditActionButtonStyle}" 
+                                Background="#2C5E3B" 
+                                HorizontalAlignment="Right" 
+                                Height="42" 
+                                Click="BtnSaveChanges_Click" 
+                                Width="160"/>
                     </Grid>
                 </StackPanel>
 
-                                <!-- 3. ANALYTICS DASHBOARD PANEL -->
+                <!-- 3. ANALYTICS DASHBOARD PANEL -->
                 <StackPanel x:Name="PanelAnalytics" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
                     <TextBlock Text="Ranger Analytics Dashboard" FontSize="24" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Left" Margin="0,0,0,20"/>
 
