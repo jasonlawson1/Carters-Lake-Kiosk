@@ -8,18 +8,19 @@
         Title="Player Info"
         Width="450" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
+        Background="#F5F2EB"
         ResizeMode="NoResize"
         FocusManager.FocusedElement="{Binding ElementName=NameBox}">
 
     <StackPanel Margin="24">
         <TextBlock Text="What's your name?" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,8"/>
-        <TextBox x:Name="NameBox" MaxLength="15" FontSize="20" Padding="6" Margin="0,0,0,16"/>
+        <TextBox x:Name="NameBox" MaxLength="15" FontSize="20" Padding="6" Margin="0,0,0,16" BorderBrush="#C29B38"/>
 
-        <CheckBox x:Name="AdultCheckBox" Content="Are you an adult?" FontSize="18" Margin="0,0,0,24"/>
+        <CheckBox x:Name="AdultCheckBox" Content="Are you an adult?" FontSize="18" Margin="0,0,0,24" BorderBrush="#C29B38"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Cancel" IsCancel="True" Width="110" Height="44" Margin="0,0,12,0" Background="#FFB90000"/>
-            <Button Content="Done" IsDefault="True" Width="140" Height="44" Click="Submit_Click" Background="#FFB90000"/>
+            <Button Content="Cancel" IsCancel="True" Width="110" Height="44" Margin="0,0,12,0" Background="#A6192E" Foreground="White"/>
+            <Button Content="Done" IsDefault="True" Width="140" Height="44" Click="Submit_Click" Background="#1E3F27" Foreground="White"/>
         </StackPanel>
     </StackPanel>
 </Window>

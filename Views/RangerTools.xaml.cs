@@ -591,31 +591,9 @@ namespace Capstone_UI
             KeyboardHelper.OpenTouchKeyboard();
         }
 
-        private void AnalyticsButton_Click(
-            object sender,
-            RoutedEventArgs e)
+        private void AnalyticsButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                PanelMenuButtons.Visibility = Visibility.Collapsed;
-                PanelAnalytics.Visibility = Visibility.Visible;
-
-                int totalSessions = App.Db.GetTotalSessions();
-                double averageDuration = App.Db.GetAverageSessionDuration();
-                int adultSessions = App.Db.GetAdultSessionCount();
-                int under18Sessions = App.Db.GetUnder18SessionCount();
-
-                TxtTotalSessions.Text = totalSessions.ToString();
-                int minutes = (int)(averageDuration / 60);
-                int seconds = (int)(averageDuration % 60);
-                TxtAverageDuration.Text = $"{minutes}m {seconds}s";
-                TxtAdultSessions.Text = adultSessions.ToString();
-                TxtUnder18Sessions.Text = under18Sessions.ToString();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Could not load analytics: {ex.Message}", "Analytics Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            NavigationService.Navigate(new Uri("Views/AnalyticsDashboard.xaml", UriKind.Relative));
         }
 
         private void CloseAnalyticsPanel_Click(object sender, RoutedEventArgs e)
