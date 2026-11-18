@@ -1,0 +1,99 @@
+<Page
+    x:Class="Capstone_UI.EducationalCategoriesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="EducationalCategoriesPage"
+    Background="#F4F0E7">
+
+    <Page.Resources>
+        <SolidColorBrush
+            x:Key="ForestGreen"
+            Color="#1E5631" />
+
+        <SolidColorBrush
+            x:Key="AccentGold"
+            Color="#C7A441" />
+    </Page.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock
+                Text="Educational Categories"
+                FontSize="30"
+                FontWeight="Bold"
+                Foreground="{StaticResource ForestGreen}" />
+
+            <TextBlock
+                Text="Engagement by educational category. Expand a row to view contributing games."
+                FontSize="15"
+                Margin="0,4,0,18" />
+        </StackPanel>
+
+        <ScrollViewer
+            Grid.Row="1"
+            VerticalScrollBarVisibility="Auto">
+
+            <ItemsControl x:Name="CategoryList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Expander
+                            Margin="0,5"
+                            Background="White"
+                            BorderBrush="{StaticResource AccentGold}"
+                            BorderThickness="1">
+
+                            <Expander.Header>
+                                <Grid
+                                    Width="850"
+                                    Margin="10">
+
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        Text="{Binding CategoryName}"
+                                        FontSize="17"
+                                        FontWeight="Bold"
+                                        VerticalAlignment="Center" />
+
+                                    <Border
+                                        Grid.Column="1"
+                                        Height="22"
+                                        Width="{Binding BarWidth}"
+                                        Background="{StaticResource ForestGreen}"
+                                        HorizontalAlignment="Left"
+                                        CornerRadius="3" />
+
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        Text="{Binding SessionCount}"
+                                        FontWeight="Bold"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center" />
+                                </Grid>
+                            </Expander.Header>
+
+                            <Border
+                                Background="#F7F3E8"
+                                Padding="15">
+
+                                <TextBlock
+                                    Text="{Binding GamesDisplay, StringFormat=Contributing games: {0}}"
+                                    FontSize="14"
+                                    TextWrapping="Wrap" />
+                            </Border>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Page>
