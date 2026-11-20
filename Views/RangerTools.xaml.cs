@@ -390,6 +390,17 @@ namespace Capstone_UI
         }
 
 
+
+
+        private void EditLeaderboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Open leaderboard editor panel or page
+        }
+
+
+
+
+
         private static void CopyDirectory(string sourceDir, string targetDir) // Recursively copies the contents of the source directory to the target directory, including all files and subdirectories
         {
             Directory.CreateDirectory(targetDir); // Ensure the target directory exists before copying files and subdirectories

@@ -12,7 +12,7 @@
         <!-- Outermost Container Panel (Stretches vertically with Margin=0 to touch header & footer) -->
         <Border Width="1620" 
                 Background="#E6F5F2EB" 
-                BorderBrush= "#C29B38" BorderThickness="1.5" 
+                BorderBrush="#C29B38" BorderThickness="1.5" 
                 CornerRadius="18" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Stretch" 
@@ -129,9 +129,9 @@
 
                         <!-- 4. Play Button with Flashing Text -->
                         <Button Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" 
-        Width="350" Height="60" 
-        Background="#1E3F27" Foreground="White" 
-        HorizontalAlignment="Center" Margin="0,0,0,15" Cursor="Hand" Click="Button_Click">
+                                Width="350" Height="60" 
+                                Background="#1E3F27" Foreground="White" 
+                                HorizontalAlignment="Center" Margin="0,0,0,15" Cursor="Hand" Click="Button_Click">
 
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -146,8 +146,8 @@
                                         <BeginStoryboard>
                                             <Storyboard RepeatBehavior="Forever" AutoReverse="True">
                                                 <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                         From="1.0" To="0.2" 
-                                         Duration="0:0:0.8"/>
+                                                                 From="1.0" To="0.2" 
+                                                                 Duration="0:0:0.8"/>
                                             </Storyboard>
                                         </BeginStoryboard>
                                     </EventTrigger>
@@ -166,40 +166,72 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 6. Bottom-Right: Leaderboard (Pushed down 5px from Play Button) -->
+                        <!-- 6. Bottom-Right: Leaderboard (Stacked text, alternating greens, independently scrollable) -->
                         <Border Grid.Column="1" Grid.Row="3"
-                                Background="#330F172A" CornerRadius="12" Padding="20"
+                                Background="#295636" CornerRadius="12" Padding="20"
                                 BorderBrush="#C29B38" BorderThickness="1.5"
-                                Margin="12,5,0,0" VerticalAlignment="Stretch">
+                                Margin="12,5,0,0" VerticalAlignment="Top">
                             <StackPanel>
-                                <!-- Header -->
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                                    <TextBlock Text="🏆 " FontSize="22" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Leaderboard" Foreground="#CBD5E1" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <!-- Pinned Header -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <TextBlock Text="🏆 " FontSize="22" VerticalAlignment="Center" Foreground="#C29B38"/>
+                                    <TextBlock Text="Leaderboard" Foreground="White" FontSize="25" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="🏆 " FontSize="22" VerticalAlignment="Center" Foreground="#C29B38"/>
                                 </StackPanel>
 
-                                <!-- Rows: Rank | Player Name | Score (filled from GameSelection.xaml.cs) -->
-                                <ItemsControl x:Name="LeaderboardList">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,4">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="40"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat={}{0}.}" Foreground="#C29B38" FontSize="16" FontWeight="Bold"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding Username}" Foreground="White" FontSize="16" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding DisplayScore}" Foreground="#CBD5E1" FontSize="16" FontWeight="SemiBold" Margin="10,0,0,0"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <!-- Scrollable Entries Container -->
+                                <ScrollViewer MaxHeight="260"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              PanningMode="VerticalOnly"
+                                              Padding="0,0,6,0">
+                                    <StackPanel>
+                                        <ItemsControl x:Name="LeaderboardList" AlternationCount="2">
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Margin" Value="0,0,0,8"/>
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border x:Name="RowCard"
+                                                            CornerRadius="8"
+                                                            Padding="14,10"
+                                                            BorderBrush="#C29B38"
+                                                            BorderThickness="1"
+                                                            Background="#1E3F27">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Rank, StringFormat={}#{0}}"
+                                                                       Foreground="#F59E0B"
+                                                                       FontSize="12"
+                                                                       FontWeight="Bold"
+                                                                       Margin="0,0,0,2"/>
+                                                            <TextBlock Text="{Binding Username}"
+                                                                       Foreground="White"
+                                                                       FontSize="17"
+                                                                       FontWeight="SemiBold"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding DisplayScore, StringFormat={}Score: {0}}"
+                                                                       Foreground="#E2E8F0"
+                                                                       FontSize="14"
+                                                                       Margin="0,2,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(ItemsControl.AlternationIndex)}" Value="1">
+                                                            <Setter TargetName="RowCard" Property="Background" Value="#356B44"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
 
-                                <!-- Shown when nobody has played the selected game yet -->
-                                <TextBlock x:Name="TxtLeaderboardEmpty" Text="No players yet. Be the first!"
-                                           Foreground="#CBD5E1" FontSize="16" HorizontalAlignment="Center"
-                                           Visibility="Collapsed"/>
+                                        <!-- Shown when nobody has played the selected game yet -->
+                                        <TextBlock x:Name="TxtLeaderboardEmpty" Text="No players yet. Be the first!"
+                                                   Foreground="#CBD5E1" FontSize="16" HorizontalAlignment="Center"
+                                                   Visibility="Collapsed"/>
+                                    </StackPanel>
+                                </ScrollViewer>
                             </StackPanel>
                         </Border>
 

@@ -85,6 +85,48 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Game Visibility Toggle Switch Style -->
+        <Style x:Key="VisibilitySwitchStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border x:Name="SwitchTrack"
+                                    Width="48" Height="26"
+                                    CornerRadius="13"
+                                    Background="#94A3B8"
+                                    BorderBrush="{StaticResource AccentGold}"
+                                    BorderThickness="1.2"
+                                    Padding="2">
+                                <Ellipse x:Name="SwitchThumb"
+                                         Width="20" Height="20"
+                                         Fill="#F5F2EB"
+                                         HorizontalAlignment="Left"/>
+                            </Border>
+                            <TextBlock x:Name="SwitchLabel"
+                                       Text="Off"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#64748B"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="{StaticResource ForestGreenHover}"/>
+                                <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="SwitchLabel" Property="Text" Value="On"/>
+                                <Setter TargetName="SwitchLabel" Property="Foreground" Value="{StaticResource ForestGreen}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
     <Grid>
@@ -107,12 +149,13 @@
             <Grid>
                 <!-- 1. MAIN MENU BUTTONS (Centered Stack) -->
                 <StackPanel x:Name="PanelMenuButtons" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Visible">
-                    <TextBlock Text="RANGER ADMINISTRATION TOOLS" FontSize="24" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+                    <TextBlock Text="RANGER ADMINISTRATION TOOLS" FontSize="24" FontWeight="Black" Foreground="{StaticResource ForestGreen}" HorizontalAlignment="Center" Margin="0,0,0,20"/>
 
-                    <Button Content="➕ Add Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="AddGameButton_Click"/>
-                    <Button Content="📝 Manage Game List" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="ManageGameListButton_Click"/>
-                    <Button Content="🗑️ Remove Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Margin="0,0,0,16" Click="RemoveGameButton_Click"/>
-                    <Button Content="📊 Analytics and Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="80" Click="AnalyticsButton_Click"/>
+                    <Button Content="➕ Add Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="74" Margin="0,0,0,12" Click="AddGameButton_Click"/>
+                    <Button Content="📝 Manage Game List" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="74" Margin="0,0,0,12" Click="ManageGameListButton_Click"/>
+                    <Button Content="🗑️ Remove Game" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="74" Margin="0,0,0,12" Click="RemoveGameButton_Click"/>
+                    <Button Content="🏆 Edit Leaderboard" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="74" Margin="0,0,0,12" Click="EditLeaderboardButton_Click"/>
+                    <Button Content="📊 Analytics and Tools" Style="{StaticResource RangerToolButtonStyle}" Width="640" Height="74" Click="AnalyticsButton_Click"/>
                 </StackPanel>
 
                 <!-- 2. GAME MANAGEMENT & EDIT PANEL -->
@@ -206,12 +249,12 @@
                             </DataGridTemplateColumn>
 
                             <!-- Visibility Switch -->
-                            <DataGridTemplateColumn Header="Visibility" Width="80">
+                            <DataGridTemplateColumn Header="Visibility" Width="85">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" 
-                                                  Click="ChkIsActive_Click"
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <CheckBox Style="{StaticResource VisibilitySwitchStyle}"
+                      IsChecked="{Binding IsActive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      Click="ChkIsActive_Click"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
